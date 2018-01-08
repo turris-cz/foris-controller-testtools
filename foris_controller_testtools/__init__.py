@@ -1,5 +1,5 @@
 #
-# foris-controller
+# foris-controller-testtools
 # Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,17 +17,5 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-def match_subdict(expected_data, obtained_data):
-    for key in expected_data:
-        if key not in obtained_data:
-            return False
-        if isinstance(expected_data[key], dict):
-            if not isinstance(obtained_data[key], dict):
-                return False
-            if not match_subdict(expected_data[key], obtained_data[key]):
-                return False
-            continue
-        if not expected_data[key] == obtained_data[key]:
-            return False
 
-    return True
+__version__ = "0.1"
