@@ -24,20 +24,26 @@ import pytest
 import shutil
 import subprocess
 
-from multiprocessing import Lock
-
 from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
 
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 
 
-notifications_lock = Lock()
+def _override_exception(instructions):
+    import inspect
+    name = inspect.stack()[1][3]
+    raise NotImplementedError("Override fixture '%s' in conftest.py: %s" % (name, instructions))
 
 
 @pytest.fixture(scope="session")
-def ubusd_test():
-    ubusd_instance = subprocess.Popen(["ubusd", "-A", "tests/ubus-acl", "-s", UBUS_PATH])
+def ubusd_acl_path():
+    _override_exception("should return a path to ubus acl directory")
+
+
+@pytest.fixture(scope="session")
+def ubusd_test(ubusd_acl_path):
+    ubusd_instance = subprocess.Popen(["ubusd", "-A", ubusd_acl_path, "-s", UBUS_PATH])
     yield ubusd_instance
     ubusd_instance.kill()
     try:
@@ -113,17 +119,20 @@ def lock_backend(request):
         yield multiprocessing
 
 
+@pytest.fixture(scope="session")
+def uci_config_default_path():
+    _override_exception("should return a path to default uci config directory")
+
+
 @pytest.fixture(autouse=True, scope="function")
-def uci_configs_init(request):
+def uci_configs_init(request, uci_config_default_path):
     """ Sets directory from where the uci configs should be looaded
         yields path to modified directory and path to original directory
     """
     if request.node.get_marker('uci_config_path'):
         dir_path = request.node.get_marker('uci_config_path').args[0]
     else:
-        dir_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "uci_configs", "defaults"
-        )
+        dir_path = uci_config_default_path
 
     # remove target dir
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)

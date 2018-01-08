@@ -35,12 +35,14 @@ else:
     SocketServer = socketserver
 
 
-from multiprocessing import Process, Value
+from multiprocessing import Process, Value, Lock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 NOTIFICATION_SOCK_PATH = "/tmp/foris-controller-notifications-test.soc"
 NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
+
+notifications_lock = Lock()
 
 
 class Infrastructure(object):
@@ -297,5 +299,3 @@ def unix_notification_listener():
 
         server = Server(NOTIFICATION_SOCK_PATH, Handler)
         server.serve_forever()
-
-
