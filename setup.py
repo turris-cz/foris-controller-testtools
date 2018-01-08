@@ -37,8 +37,10 @@ setup(
     description=DESCRIPTION,
     long_description=open('README.rst').read(),
     requires=[
-        'foris_controller',
         'pytest',
+    ],
+    install_requires=[
+        "foris-controller",
     ],
     zip_safe=False,
 )
