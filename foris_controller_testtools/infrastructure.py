@@ -49,7 +49,7 @@ class Infrastructure(object):
 
     def __init__(
         self, name, backend_name, modules, extra_module_paths, uci_config_dir,
-        cmdline_script_root, debug_output=False
+        cmdline_script_root, file_root, debug_output=False
     ):
         try:
             os.unlink(SOCK_PATH)
@@ -58,6 +58,7 @@ class Infrastructure(object):
 
         os.environ["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
         os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
+        os.environ["FORIS_FILE_ROOT"] = file_root
 
         self.name = name
         self.backend_name = backend_name

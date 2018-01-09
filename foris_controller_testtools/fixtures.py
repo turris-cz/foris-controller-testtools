@@ -28,6 +28,7 @@ from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
 
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
+FILE_ROOT_PATH = "/tmp/foris_files"
 from .utils import INIT_SCRIPT_TEST_DIR
 
 
@@ -121,7 +122,7 @@ def extra_module_paths():
     return []  # by default return an empty list test should override this fixture
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def cmdline_script_root():
     _override_exception(
         "should return a path to a script root dir which are run within cmdline backend")
@@ -133,7 +134,7 @@ def infrastructure(
 ):
     instance = Infrastructure(
         message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
-        cmdline_script_root, request.config.getoption("--debug-output")
+        cmdline_script_root, FILE_ROOT_PATH, request.config.getoption("--debug-output")
     )
     yield instance
     instance.exit()
@@ -180,3 +181,24 @@ def uci_configs_init(request, uci_config_default_path):
 
     # cleanup
     shutil.rmtree(UCI_CONFIG_DIR_PATH, ignore_errors=True)
+
+
+@pytest.fixture(scope="module")
+def file_root():
+    _override_exception(
+        "should return a path to a file root dir which are run within file backend")
+
+
+@pytest.fixture(autouse=True, scope="function")
+def file_root_init(request, file_root):
+    if request.node.get_marker('file_root_path'):
+        dir_path = request.node.get_marker('file_root_path').args[0]
+    else:
+        dir_path = file_root
+
+    shutil.rmtree(FILE_ROOT_PATH, ignore_errors=True)
+    shutil.copytree(dir_path, FILE_ROOT_PATH)
+
+    yield FILE_ROOT_PATH, dir_path
+
+    shutil.rmtree(FILE_ROOT_PATH, ignore_errors=True)
