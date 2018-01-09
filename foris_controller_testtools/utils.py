@@ -17,6 +17,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import os
+
+INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
+
 
 def match_subdict(expected_data, obtained_data):
     """ Decides whether one dict contains values specified in the second dict
@@ -43,3 +47,13 @@ def match_subdict(expected_data, obtained_data):
             return False
 
     return True
+
+
+def check_service_result(name, passed, action):
+    path = os.path.join(INIT_SCRIPT_TEST_DIR, name)
+    with open(path) as f:
+        obtained_passed, obtained_action = f.read().strip().split(" ")
+    expected_passed = "passed" if passed else "failed"
+    assert obtained_passed == expected_passed
+    assert action == obtained_action
+    os.unlink(path)

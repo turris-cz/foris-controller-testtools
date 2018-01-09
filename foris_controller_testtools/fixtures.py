@@ -28,12 +28,34 @@ from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
 
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
+from .utils import INIT_SCRIPT_TEST_DIR
 
 
 def _override_exception(instructions):
     import inspect
     name = inspect.stack()[1][3]
     raise NotImplementedError("Override fixture '%s' in conftest.py: %s" % (name, instructions))
+
+
+@pytest.fixture(scope="function")
+def init_script_result():
+    try:
+        shutil.rmtree(INIT_SCRIPT_TEST_DIR, ignore_errors=True)
+    except:
+        pass
+
+    try:
+        os.makedirs(INIT_SCRIPT_TEST_DIR)
+    except:
+        pass
+
+    yield INIT_SCRIPT_TEST_DIR
+
+    return
+    try:
+        shutil.rmtree(INIT_SCRIPT_TEST_DIR, ignore_errors=True)
+    except:
+        pass
 
 
 @pytest.fixture(scope="session")
@@ -99,11 +121,19 @@ def extra_module_paths():
     return []  # by default return an empty list test should override this fixture
 
 
+@pytest.fixture(scope="session")
+def cmdline_script_root():
+    _override_exception(
+        "should return a path to a script root dir which are run within cmdline backend")
+
+
 @pytest.fixture(scope="module")
-def infrastructure(request, backend, message_bus, controller_modules, extra_module_paths):
+def infrastructure(
+    request, backend, message_bus, controller_modules, extra_module_paths, cmdline_script_root
+):
     instance = Infrastructure(
         message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
-        request.config.getoption("--debug-output")
+        cmdline_script_root, request.config.getoption("--debug-output")
     )
     yield instance
     instance.exit()
