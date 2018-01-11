@@ -20,6 +20,7 @@
 import os
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
+SH_CALLED_FILE = "/tmp/sh_called"
 
 
 def match_subdict(expected_data, obtained_data):
@@ -57,3 +58,36 @@ def check_service_result(name, passed, action):
     assert obtained_passed == expected_passed
     assert action == obtained_action
     os.unlink(path)
+
+
+def sh_was_called(script, args=[], cleanup=True):
+    """ Checks whether a script was called using sh command
+        The sh command should mock shell execution and print its content into SH_CALLED_FILE
+    :param script: script which is checked whether it was called
+    :param script: str
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove SH_CALLED_FILE after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+
+    res = False
+    try:
+        with open(SH_CALLED_FILE) as f:
+            lines = f.readlines()
+
+        script_and_args = " ".join([script] + args)
+        for line in lines:
+            if script_and_args in line:
+                res = True
+    except:
+        pass
+
+    if cleanup:
+        try:
+            os.unlink(SH_CALLED_FILE)
+        except:
+            pass
+
+    return res
