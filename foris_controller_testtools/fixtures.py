@@ -111,7 +111,7 @@ def controller_modules():
         you can easilly override this fixture.
     """
     return [
-        "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan", "time"
+        "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan", "time",
         "wan",
     ]
 
