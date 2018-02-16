@@ -112,7 +112,7 @@ def controller_modules():
     """
     return [
         "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan", "time",
-        "wan",
+        "wan", "router_notifications"
     ]
 
 
