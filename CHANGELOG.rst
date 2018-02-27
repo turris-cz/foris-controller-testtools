@@ -1,3 +1,11 @@
+0.3 (2018-02-27)
+----------------
+
+* sending requests and notifications via client socket
+* router_notifications module added to modules
+* wan module added to modules
+* time module added to modules
+
 0.2 (2018-01-15)
 ----------------
 
