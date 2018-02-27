@@ -28,14 +28,14 @@ import uuid
 import subprocess
 import struct
 
+from multiprocessing import Process, Value, Lock
+
 if sys.version_info < (3, 0):
     import SocketServer
 else:
     import socketserver
     SocketServer = socketserver
 
-
-from multiprocessing import Process, Value, Lock
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
@@ -49,12 +49,19 @@ class Infrastructure(object):
 
     def __init__(
         self, name, backend_name, modules, extra_module_paths, uci_config_dir,
-        cmdline_script_root, file_root, debug_output=False
+        cmdline_script_root, file_root, client_socket_path=None, debug_output=False
     ):
+        self.client_socket_path = client_socket_path
+        self.client_socket = None
         try:
             os.unlink(SOCK_PATH)
-        except:
+        except Exception:
             pass
+        if client_socket_path:
+            try:
+                os.unlink(client_socket_path)
+            except Exception:
+                pass
 
         os.environ["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
         os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
@@ -93,9 +100,10 @@ class Infrastructure(object):
         extra_paths = list(itertools.chain.from_iterable(
             [("--extra-module-path", e) for e in extra_module_paths]))
 
+        client_socket_option = ["-C", client_socket_path] if client_socket_path else []
         args = [
             "foris-controller",
-        ] + modules + extra_paths + [
+        ] + modules + extra_paths + client_socket_option + [
             "-d", "-b", backend_name, name, "--path", self.sock_path
         ]
 
@@ -119,7 +127,7 @@ class Infrastructure(object):
         try:
             import ubus  # disconnect from ubus if connected
             ubus.disconnect()
-        except:
+        except Exception:
             pass
 
     @staticmethod
@@ -220,6 +228,42 @@ class Infrastructure(object):
                     if not old_data == last_data:
                         break
         return last_data
+
+    def _establish_connection_to_client_socket(self):
+        if not self.client_socket_path:
+            raise Exception("This instance is not started with client socket")
+        while not os.path.exists(self.client_socket_path):
+            time.sleep(0.3)
+
+        self.client_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        self.client_socket.connect(self.client_socket_path)
+
+    def send_request_via_client_socket(self, msg, timeout=3):
+        if not self.client_socket:
+            self._establish_connection_to_client_socket()
+
+        self.client_socket.settimeout(timeout)
+
+        data = json.dumps(msg).encode("utf8")
+        length_bytes = struct.pack("I", len(data))
+        self.client_socket.sendall(length_bytes + data)
+
+        length = struct.unpack("I", self.client_socket.recv(4))[0]
+        received = self.client_socket.recv(length)
+        recv_len = len(received)
+        while recv_len < length:
+            received += self.client_socket.recv(length)
+            recv_len = len(received)
+
+        return json.loads(received.decode("utf8"))
+
+    def send_notification_via_client_socket(self, msg):
+        if not self.client_socket:
+            self._establish_connection_to_client_socket()
+
+        data = json.dumps(msg).encode("utf8")
+        length_bytes = struct.pack("I", len(data))
+        self.client_socket.sendall(length_bytes + data)
 
 
 def ubus_notification_listener(exiting):

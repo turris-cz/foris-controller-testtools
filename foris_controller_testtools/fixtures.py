@@ -25,11 +25,11 @@ import shutil
 import subprocess
 
 from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
-
+from .utils import INIT_SCRIPT_TEST_DIR
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 FILE_ROOT_PATH = "/tmp/foris_files"
-from .utils import INIT_SCRIPT_TEST_DIR
+CLIENT_SOCKET_PATH = "/tmp/foris-controller-client-socket.soc"
 
 
 def _override_exception(instructions):
@@ -136,6 +136,19 @@ def infrastructure(
     instance = Infrastructure(
         message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
         cmdline_script_root, FILE_ROOT_PATH, request.config.getoption("--debug-output")
+    )
+    yield instance
+    instance.exit()
+
+
+@pytest.fixture(scope="module")
+def infrastructure_with_client_socket(
+    request, backend, message_bus, controller_modules, extra_module_paths, cmdline_script_root
+):
+    instance = Infrastructure(
+        message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
+        cmdline_script_root, FILE_ROOT_PATH, CLIENT_SOCKET_PATH,
+        request.config.getoption("--debug-output")
     )
     yield instance
     instance.exit()
