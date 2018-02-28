@@ -135,7 +135,8 @@ def infrastructure(
 ):
     instance = Infrastructure(
         message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
-        cmdline_script_root, FILE_ROOT_PATH, request.config.getoption("--debug-output")
+        cmdline_script_root, FILE_ROOT_PATH, client_socket_path=None,
+        debug_output=request.config.getoption("--debug-output")
     )
     yield instance
     instance.exit()
