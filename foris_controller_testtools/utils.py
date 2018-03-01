@@ -17,7 +17,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 import os
+import updater
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
@@ -81,13 +83,29 @@ def sh_was_called(script, args=[], cleanup=True):
         for line in lines:
             if script_and_args in line:
                 res = True
-    except:
+    except Exception:
         pass
 
     if cleanup:
         try:
             os.unlink(SH_CALLED_FILE)
-        except:
+        except Exception:
             pass
 
     return res
+
+
+def set_approval(approval=None):
+    """ Sets mocked approval
+    :param approval: new approval (or removes approval if None)
+    :type approval: None or dict
+    """
+    if approval is None:
+        try:
+            os.unlink(updater.APPROVAL_FILE_PATH)
+        except Exception:
+            pass
+    else:
+        with open(updater.APPROVAL_FILE_PATH, "w") as f:
+            json.dump(approval, f)
+            f.flush()

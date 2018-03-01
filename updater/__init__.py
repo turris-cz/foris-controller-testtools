@@ -19,10 +19,18 @@
 
 
 import os
-
+import json
 
 RUNNING_FILE_PATH = "/tmp/updater-running-mock"
+APPROVAL_FILE_PATH = "/tmp/updater-approval-mock.json"
 
 
 def is_running():
     return os.path.exists(RUNNING_FILE_PATH)
+
+
+def get_approval():
+    if not os.path.exists(APPROVAL_FILE_PATH):
+        return None
+    with open(APPROVAL_FILE_PATH) as f:
+        return json.load(f)
