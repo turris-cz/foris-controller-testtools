@@ -19,6 +19,7 @@
 
 
 import os
+import subprocess
 import json
 
 RUNNING_FILE_PATH = "/tmp/updater-running-mock"
@@ -64,4 +65,9 @@ def resolve_approval(approval_id, grant):
     except Exception:
         return False
 
+    return True
+
+
+def run(set_reboot_indicator):
+    subprocess.Popen(["python", "-m", "updater"] + (["-p"] if set_reboot_indicator else []))
     return True

@@ -82,7 +82,7 @@ class ClientSocket(object):
 
     def notification(self, msg):
         if not self.socket:
-            self._establish_connection_to_client_socket()
+            self.connect()
 
         data = json.dumps(msg).encode("utf8")
         length_bytes = struct.pack("I", len(data))

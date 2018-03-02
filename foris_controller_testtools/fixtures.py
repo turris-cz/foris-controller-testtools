@@ -30,6 +30,7 @@ from .utils import INIT_SCRIPT_TEST_DIR
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 FILE_ROOT_PATH = "/tmp/foris_files"
 CLIENT_SOCKET_PATH = "/tmp/foris-controller-client-socket.soc"
+REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
 
 
 def _override_exception(instructions):
@@ -42,12 +43,12 @@ def _override_exception(instructions):
 def init_script_result():
     try:
         shutil.rmtree(INIT_SCRIPT_TEST_DIR, ignore_errors=True)
-    except:
+    except Exception:
         pass
 
     try:
         os.makedirs(INIT_SCRIPT_TEST_DIR)
-    except:
+    except Exception:
         pass
 
     yield INIT_SCRIPT_TEST_DIR
@@ -55,7 +56,7 @@ def init_script_result():
     return
     try:
         shutil.rmtree(INIT_SCRIPT_TEST_DIR, ignore_errors=True)
-    except:
+    except Exception:
         pass
 
 
@@ -71,7 +72,7 @@ def ubusd_test(ubusd_acl_path):
     ubusd_instance.kill()
     try:
         os.unlink(SOCK_PATH)
-    except:
+    except Exception:
         pass
 
 
@@ -217,3 +218,18 @@ def file_root_init(request, file_root):
     yield FILE_ROOT_PATH, dir_path
 
     shutil.rmtree(FILE_ROOT_PATH, ignore_errors=True)
+
+
+@pytest.fixture(scope="function")
+def clean_reboot_indicator():
+    try:
+        os.unlink(REBOOT_INDICATOR_PATH)
+    except Exception:
+        pass
+
+    yield REBOOT_INDICATOR_PATH
+
+    try:
+        os.unlink(REBOOT_INDICATOR_PATH)
+    except Exception:
+        pass
