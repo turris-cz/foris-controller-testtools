@@ -136,21 +136,8 @@ def infrastructure(
 ):
     instance = Infrastructure(
         message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
-        cmdline_script_root, FILE_ROOT_PATH, client_socket_path=None,
-        debug_output=request.config.getoption("--debug-output")
-    )
-    yield instance
-    instance.exit()
-
-
-@pytest.fixture(scope="module")
-def infrastructure_with_client_socket(
-    request, backend, message_bus, controller_modules, extra_module_paths, cmdline_script_root
-):
-    instance = Infrastructure(
-        message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
         cmdline_script_root, FILE_ROOT_PATH, CLIENT_SOCKET_PATH,
-        request.config.getoption("--debug-output")
+        debug_output=request.config.getoption("--debug-output")
     )
     yield instance
     instance.exit()
