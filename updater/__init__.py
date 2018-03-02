@@ -34,3 +34,34 @@ def get_approval():
         return None
     with open(APPROVAL_FILE_PATH) as f:
         return json.load(f)
+
+
+def resolve_approval(approval_id, grant):
+    """ resolve approval
+
+    :param approval_id: id of the approval
+    :type approval_id: string
+    :param grant: shall the approval be granted otherwise it will be denied
+    :type grant: bool
+    """
+    # try to find approval
+    try:
+        with open(APPROVAL_FILE_PATH) as f:
+            data = json.load(f)
+    except Exception:
+        return False
+
+    # check and update status
+    if data["id"] != approval_id or data["status"] != "asked":
+        return False
+    data["status"] = "granted" if grant else "denied"
+
+    # write it back
+    try:
+        with open(APPROVAL_FILE_PATH, "w") as f:
+            data = json.dump(data, f)
+            f.flush()
+    except Exception:
+        return False
+
+    return True
