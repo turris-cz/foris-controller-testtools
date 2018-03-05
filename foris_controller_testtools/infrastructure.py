@@ -258,7 +258,7 @@ class Infrastructure(object):
             u"data": json.loads("".join([e["data"] for e in res])),
         } if res else None
 
-    def get_notifications(self, old_data=None):
+    def get_notifications(self, old_data=None, filters=[]):
         while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
             time.sleep(0.2)
 
@@ -269,9 +269,13 @@ class Infrastructure(object):
                 with open(NOTIFICATIONS_OUTPUT_PATH) as f:
                     data = f.readlines()
                     last_data = [json.loads(e.strip()) for e in data]
-                    if not old_data == last_data:
+                    filtered_data = [
+                        e for e in last_data if not filters or
+                        (e["module"], e["action"]) in filters
+                    ]
+                    if not old_data == filtered_data:
                         break
-        return last_data
+        return filtered_data
 
 
 def ubus_notification_listener(exiting):
