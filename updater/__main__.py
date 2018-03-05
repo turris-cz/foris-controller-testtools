@@ -51,3 +51,11 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and "-p" in sys.argv[1:]:
         with open(REBOOT_INDICATOR_PATH, "w") as f:
             f.flush()
+        try:
+            sock.notification({
+                "module": "maintain",
+                "kind": "notification",
+                "action": "reboot_required",
+            })
+        except socket.error:
+            pass
