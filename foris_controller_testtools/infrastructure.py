@@ -259,22 +259,28 @@ class Infrastructure(object):
         } if res else None
 
     def get_notifications(self, old_data=None, filters=[]):
+
+        def filter_data(data):
+            if data is None:
+                return None
+            else:
+                return [
+                    e for e in data if not filters or
+                    (e["module"], e["action"]) in filters
+                ]
+
         while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
             time.sleep(0.2)
 
         global notifications_lock
 
         while True:
-            with notifications_lock:
-                with open(NOTIFICATIONS_OUTPUT_PATH) as f:
-                    data = f.readlines()
-                    last_data = [json.loads(e.strip()) for e in data]
-                    filtered_data = [
-                        e for e in last_data if not filters or
-                        (e["module"], e["action"]) in filters
-                    ]
-                    if not old_data == filtered_data:
-                        break
+            with notifications_lock, open(NOTIFICATIONS_OUTPUT_PATH) as f:
+                data = f.readlines()
+                last_data = [json.loads(e.strip()) for e in data]
+                filtered_data = filter_data(last_data)
+                if not filter_data(old_data) == filtered_data:
+                    break
         return filtered_data
 
 
