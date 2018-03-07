@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 #
 # foris-controller-testtools
 # Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -20,6 +22,9 @@
 import json
 import os
 import updater
+import updater.lists
+import updater.l10n
+import updater.approvals
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
@@ -102,10 +107,151 @@ def set_approval(approval=None):
     """
     if approval is None:
         try:
-            os.unlink(updater.APPROVAL_FILE_PATH)
+            os.unlink(updater.approvals.APPROVAL_FILE_PATH)
         except Exception:
             pass
     else:
-        with open(updater.APPROVAL_FILE_PATH, "w") as f:
+        with open(updater.approvals.APPROVAL_FILE_PATH, "w") as f:
             json.dump(approval, f)
             f.flush()
+
+
+DEFAULT_LANGS = {
+    "cs": True,
+    "de": True,
+    "da": False,
+    "fr": False,
+    "lt": False,
+    "pl": False,
+    "ru": False,
+    "sk": False,
+    "hu": False,
+    "it": False,
+}
+
+
+def set_languages(langs=None):
+    """ Sets mocked languages
+    :param langs: {"cs": True, "de": True, ...}
+    :type langs: dict
+    """
+    if not langs:
+        langs = DEFAULT_LANGS
+    with open(updater.l10n.LANGS_FILE_PATH, "w") as f:
+        json.dump(langs, f)
+        f.flush()
+
+
+DEFAULT_USERLISTS = {
+    "api-token": {
+        "message": {
+            "en": u"A Foris plugin allowing to manage remote API access tokens"
+            " (for example for use in Spectator or Android application).",
+            "cs": "Správa tokenů pro vzdálený API přístup"
+            " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",
+            "de": "Ein Plugin für Foris, welcher Management von Tokens für das"
+            " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
+            " Applikationen) erlaubt.",
+        },
+        "title": {
+            "en": "Access tokens",
+            "cs": "Přístupové tokeny",
+            "de": "Zugangsverwaltung",
+        },
+        "enabled": False,
+        "hidden": False,
+    },
+    "automation": {
+        "message": {
+            "cs": 'Software pro ovládání domácí automatizace, včetně Turris Gadgets.',
+            "de": 'Steuerungssoftware für die Hausautomation, einschließlich Turris '
+            'Gadgets.',
+            "en": 'Control software for home automation, including Turris Gadgets.',
+
+        },
+        "title": {
+            "cs": 'Domácí automatizace',
+            "de": 'Hausautomation',
+            "en": 'Home automation',
+        },
+        "enabled": False,
+        "hidden": False,
+    },
+    "dev-detect": {
+        "message": {
+            'cs': 'Software pro detekci nově připojených zařízení na lokální síti'
+            ' (EXPERIMENTÁLNÍ).',
+            'de': 'Software für die Erkennung neuer Geräte im lokalen Netzwerk (EXPERIMENTELL).',
+            'en': 'Software for detecting new devices on local network (EXPERIMENTAL).',
+
+        },
+        "title": {
+            'cs': 'Detekce připojených zařízení',
+            'de': 'Geräterkennung',
+            'en': 'Device detection',
+
+        },
+        "enabled": False,
+        "hidden": False,
+    },
+    "dvb": {
+        "message": {
+            'cs': 'Software na sdílení televizního vysílání přijímaného Turrisem.'
+            ' Neobsahuje ovladače pro zařízení.',
+            'de': 'Software für die Weiterleitung von Fernsehsignal, welcher mittels'
+            ' DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.',
+            'en': 'Software for sharing television received by a DVB tuner on Turris.' 
+            ' Does not include device drivers.'
+        },
+        "title": {
+            'cs': 'Televizní tuner',
+            'de': 'DVB-Tuner',
+            'en': 'DVB tuner',
+
+        },
+        "enabled": False,
+        "hidden": False,
+    },
+    'i_agree_honeypot': {
+        "message": {
+            "cs": 'Past na roboty zkoušející hesla na SSH.',
+            "de": 'Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten versuchen.',
+            "en": 'Trap for password-guessing robots on SSH.',
+
+        },
+        "title": {
+            "cs": 'SSH Honeypot',
+            "de": 'SSH-Honigtopf',
+            "en": 'SSH Honeypot',
+        },
+        "enabled": False,
+        "hidden": False,
+    },
+    'i_agree_datacollect': {
+        "message": {
+            "cs": '',
+            "de": '',
+            "en": '',
+        },
+        "title": {
+            "cs": '',
+            "de": '',
+            "en": '',
+        },
+        "enabled": False,
+        "hidden": True,
+    },
+}
+
+
+def set_userlists(lists=None):
+    """ Sets mocked userlists
+    :param lists: {"nas": {...}, "api-token": {...}, ...}
+    :type lists: dict
+    """
+    if not lists:
+        lists = DEFAULT_USERLISTS
+
+    with open(updater.lists.LISTS_FILE_PATH, "w") as f:
+        json.dump(lists, f)
+        f.flush()

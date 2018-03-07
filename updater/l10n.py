@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #
 # foris-controller-testtools
 # Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -19,17 +17,22 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import json
 
-import os
-import subprocess
-
-RUNNING_FILE_PATH = "/tmp/updater-running-mock"
+LANGS_FILE_PATH = "/tmp/updater-mock-l10n.json"
 
 
-def opkg_lock():
-    return os.path.exists(RUNNING_FILE_PATH)
+def languages():
+    with open(LANGS_FILE_PATH) as f:
+        return json.load(f)
 
 
-def run(set_reboot_indicator=False, wait_for_network=False):
-    subprocess.Popen(["python", "-m", "updater"] + (["-p"] if set_reboot_indicator else []))
+def update_languages(langs):
+    stored_langs = languages()
+    for l in stored_langs.keys():
+        stored_langs[l] = True if l in langs else False
+
+    with open(LANGS_FILE_PATH, "w") as f:
+        return json.dump(stored_langs, f)
+
     return True

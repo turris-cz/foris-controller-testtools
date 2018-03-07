@@ -25,7 +25,7 @@ import shutil
 import subprocess
 
 from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
-from .utils import INIT_SCRIPT_TEST_DIR
+from .utils import INIT_SCRIPT_TEST_DIR, set_userlists, set_languages
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 FILE_ROOT_PATH = "/tmp/foris_files"
@@ -218,5 +218,39 @@ def clean_reboot_indicator():
 
     try:
         os.unlink(REBOOT_INDICATOR_PATH)
+    except Exception:
+        pass
+
+
+@pytest.fixture(scope="function")
+def updater_userlists():
+    import updater.lists
+    try:
+        os.unlink(updater.lists.LISTS_FILE_PATH)
+    except Exception:
+        pass
+
+    set_userlists()
+    yield updater.lists.LISTS_FILE_PATH
+
+    try:
+        os.unlink(updater.lists.LISTS_FILE_PATH)
+    except Exception:
+        pass
+
+
+@pytest.fixture(scope="function")
+def updater_languages():
+    import updater.l10n
+    try:
+        os.unlink(updater.l10n.LANGS_FILE_PATH)
+    except Exception:
+        pass
+
+    set_languages()
+    yield updater.l10n.LANGS_FILE_PATH
+
+    try:
+        os.unlink(updater.l10n.LANGS_FILE_PATH)
     except Exception:
         pass
