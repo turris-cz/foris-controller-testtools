@@ -32,21 +32,25 @@ def current():
 
 
 def approve(approval_hash):
-    return _resolve_approval(approval_hash, True)
+    return _resolve_approval(approval_hash, "granted")
 
 
 def deny(approval_hash):
-    return _resolve_approval(approval_hash, False)
+    return _resolve_approval(approval_hash, "denied")
 
 
-def _resolve_approval(approval_hash, grant):
+def _resolve_approval(approval_hash, solution):
     """ resolve approval
 
     :param approval_hash: id of the approval
     :type approval_hash: string
-    :param grant: shall the approval be granted otherwise it will be denied
-    :type grant: bool
+    :param solution: shall the approval be granted otherwise it will be denied ("granted"/"denied")
+    :type solution: str
     """
+    action_map = {
+        "asked": ["granted", "denied"],
+        "denied": ["granted"],
+    }
     # try to find approval
     try:
         with open(APPROVAL_FILE_PATH) as f:
@@ -55,9 +59,12 @@ def _resolve_approval(approval_hash, grant):
         return False
 
     # check and update status
-    if data["hash"] != approval_hash or data["status"] != "asked":
+    if data["hash"] != approval_hash:
         return False
-    data["status"] = "granted" if grant else "denied"
+
+    if solution not in action_map.get(data["status"], []):
+        return False
+    data["status"] = solution
 
     # write it back
     try:
