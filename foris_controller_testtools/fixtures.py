@@ -111,10 +111,7 @@ def controller_modules():
     """ List of used modules. Note the if you want to limit module list,
         you can easilly override this fixture.
     """
-    return [
-        "about", "data_collect", "web", "dns", "maintain", "password", "updater", "lan", "time",
-        "wan", "router_notifications"
-    ]
+    _override_exception("should return a list of required modules")
 
 
 @pytest.fixture(scope="module")
