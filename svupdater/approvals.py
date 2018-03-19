@@ -21,6 +21,8 @@
 import os
 import json
 
+from exceptions import ExceptionUpdaterApproveInvalid
+
 APPROVAL_FILE_PATH = "/tmp/updater-approval-mock.json"
 
 
@@ -56,14 +58,15 @@ def _resolve_approval(approval_hash, solution):
         with open(APPROVAL_FILE_PATH) as f:
             data = json.load(f)
     except Exception:
-        return False
+        raise ExceptionUpdaterApproveInvalid()
 
     # check and update status
     if data["hash"] != approval_hash:
-        return False
+        raise ExceptionUpdaterApproveInvalid()
 
     if solution not in action_map.get(data["status"], []):
-        return False
+        raise ExceptionUpdaterApproveInvalid()
+
     data["status"] = solution
 
     # write it back
@@ -72,6 +75,4 @@ def _resolve_approval(approval_hash, solution):
             data = json.dump(data, f)
             f.flush()
     except Exception:
-        return False
-
-    return True
+        raise ExceptionUpdaterApproveInvalid()

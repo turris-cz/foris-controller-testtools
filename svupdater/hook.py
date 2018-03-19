@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #
 # foris-controller-testtools
 # Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
@@ -20,16 +18,9 @@
 #
 
 
-import os
-import subprocess
-
-RUNNING_FILE_PATH = "/tmp/updater-running-mock"
+AFTER_HOOK_INDICATOR = "/tmp/updater-after-hook"
 
 
-def opkg_lock():
-    return os.path.exists(RUNNING_FILE_PATH)
-
-
-def run(set_reboot_indicator=False, wait_for_network=False):
-    subprocess.Popen(["python", "-m", "updater"] + (["-p"] if set_reboot_indicator else []))
-    return True
+def register(command):
+    with open(AFTER_HOOK_INDICATOR, "w") as f:
+        f.flush()

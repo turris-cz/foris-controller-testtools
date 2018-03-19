@@ -31,7 +31,7 @@ setup(
     author_email='stepan.henek@nic.cz',
     packages=[
         'foris_controller_testtools',
-        'updater',  # mocked updater module
+        'svupdater',  # mocked updater module
     ],
     url='https://gitlab.labs.nic.cz/turris/foris-controller-testtools',
     license='COPYING',

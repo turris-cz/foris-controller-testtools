@@ -17,12 +17,14 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import time
-import sys
+import os
 import socket
+import time
 
 from foris_controller_testtools.infrastructure import ClientSocket
 from foris_controller_testtools.fixtures import CLIENT_SOCKET_PATH, REBOOT_INDICATOR_PATH
+
+from .hook import AFTER_HOOK_INDICATOR
 
 if __name__ == "__main__":
 
@@ -48,7 +50,11 @@ if __name__ == "__main__":
         # server probably disconnected
         pass
 
-    if len(sys.argv) > 1 and "-p" in sys.argv[1:]:
+    try:
+        with open(AFTER_HOOK_INDICATOR) as f:
+            pass
+        os.unlink(AFTER_HOOK_INDICATOR)
+
         with open(REBOOT_INDICATOR_PATH, "w") as f:
             f.flush()
         try:
@@ -59,3 +65,6 @@ if __name__ == "__main__":
             })
         except socket.error:
             pass
+
+    except IOError:
+        pass

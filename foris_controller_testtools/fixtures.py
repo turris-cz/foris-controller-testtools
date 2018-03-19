@@ -221,33 +221,33 @@ def clean_reboot_indicator():
 
 @pytest.fixture(scope="function")
 def updater_userlists():
-    import updater.lists
+    import svupdater.lists
     try:
-        os.unlink(updater.lists.LISTS_FILE_PATH)
+        os.unlink(svupdater.lists.LISTS_FILE_PATH)
     except Exception:
         pass
 
     set_userlists()
-    yield updater.lists.LISTS_FILE_PATH
+    yield svupdater.lists.LISTS_FILE_PATH
 
     try:
-        os.unlink(updater.lists.LISTS_FILE_PATH)
+        os.unlink(svupdater.lists.LISTS_FILE_PATH)
     except Exception:
         pass
 
 
 @pytest.fixture(scope="function")
 def updater_languages():
-    import updater.l10n
+    import svupdater.l10n
     try:
-        os.unlink(updater.l10n.LANGS_FILE_PATH)
+        os.unlink(svupdater.l10n.LANGS_FILE_PATH)
     except Exception:
         pass
 
     set_languages()
-    yield updater.l10n.LANGS_FILE_PATH
+    yield svupdater.l10n.LANGS_FILE_PATH
 
     try:
-        os.unlink(updater.l10n.LANGS_FILE_PATH)
+        os.unlink(svupdater.l10n.LANGS_FILE_PATH)
     except Exception:
         pass
