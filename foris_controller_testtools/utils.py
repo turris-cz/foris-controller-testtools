@@ -229,14 +229,14 @@ DEFAULT_USERLISTS = {
     },
     'i_agree_datacollect': {
         "message": {
-            "cs": '',
-            "de": '',
-            "en": '',
+            "cs": None,
+            "de": None,
+            "en": None,
         },
         "title": {
-            "cs": '',
-            "de": '',
-            "en": '',
+            "cs": None,
+            "de": None,
+            "en": None,
         },
         "enabled": False,
         "hidden": True,
