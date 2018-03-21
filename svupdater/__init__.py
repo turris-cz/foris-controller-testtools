@@ -23,6 +23,8 @@
 import os
 import subprocess
 
+from .hook import register
+
 RUNNING_FILE_PATH = "/tmp/updater-running-mock"
 
 
@@ -30,6 +32,9 @@ def opkg_lock():
     return os.path.exists(RUNNING_FILE_PATH)
 
 
-def run(*args, **kwargs):
+def run(hooklist=[]):
+    if hooklist:
+        register(hooklist[0])
+
     subprocess.Popen(["python", "-m", "svupdater"])
     return True
