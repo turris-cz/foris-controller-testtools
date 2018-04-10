@@ -30,6 +30,13 @@ INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
 
 
+def get_uci_module(lock_backend):
+    from foris_controller.app import app_info
+    app_info["lock_backend"] = lock_backend
+    from foris_controller_backends import uci
+    return uci
+
+
 def match_subdict(expected_data, obtained_data):
     """ Decides whether one dict contains values specified in the second dict
         The second dict may contain extra fields.
