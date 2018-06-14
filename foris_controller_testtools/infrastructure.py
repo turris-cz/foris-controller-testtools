@@ -207,25 +207,25 @@ class Infrastructure(object):
             if not ubus.get_connected():
                 ubus.connect(self.sock_path)
             function = data.get("action", "?")
-            inner_data = data.get("data", {})
+            inner_data = data.get("data", None)
             dumped_data = json.dumps(inner_data)
             request_id = str(uuid.uuid4())
             if len(dumped_data) > 512 * 1024:
                 for data_part in Infrastructure.chunks(dumped_data, 512 * 1024):
                     ubus.call(module, function, {
-                        "data": {}, "final": False, "multipart": True,
-                        "request_id": request_id, "multipart_data": data_part,
+                        "payload": {"multipart_data": data_part},
+                        "final": False, "multipart": True, "request_id": request_id,
                     })
 
                 res = ubus.call(module, function, {
-                    "data": {}, "final": True, "multipart": True,
-                    "request_id": request_id, "multipart_data": "",
+                    "payload": {"multipart_data": ""},
+                    "final": True, "multipart": True, "request_id": request_id,
                 })
 
             else:
                 res = ubus.call(module, function, {
-                    "data": inner_data, "final": True, "multipart": False,
-                    "request_id": request_id, "multipart_data": "",
+                    "payload": {"data": inner_data} if inner_data is not None else {},
+                    "final": True, "multipart": False, "request_id": request_id,
                 })
 
             ubus.disconnect()
@@ -247,9 +247,14 @@ class Infrastructure(object):
         if not ubus.get_connected():
             ubus.connect(self.sock_path)
         function = data.get("action", "?")
+        payload = {}
+        if data is not None:
+            payload["data"] = data
+        if multipart_data is not None:
+            payload["multipart_data"] = multipart_data
         res = ubus.call(module, function, {
-            "data": data, "final": final, "multipart": multipart,
-            "request_id": request_id, "multipart_data": multipart_data,
+            "payload": payload,
+            "final": final, "multipart": multipart, "request_id": request_id,
         })
         return {
             u"module": data["module"],
