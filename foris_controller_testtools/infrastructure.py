@@ -229,11 +229,25 @@ class Infrastructure(object):
                 })
 
             ubus.disconnect()
+            resp = json.loads("".join([e["data"] for e in res]))
+            if "errors" in resp:
+                return {
+                    u"module": data["module"],
+                    u"action": data["action"],
+                    u"kind": u"reply",
+                    u"errors": resp["errors"],
+                }
+            if "data" in resp:
+                return {
+                    u"module": data["module"],
+                    u"action": data["action"],
+                    u"kind": u"reply",
+                    u"data": resp["data"],
+                }
             return {
                 u"module": data["module"],
                 u"action": data["action"],
                 u"kind": u"reply",
-                u"data": json.loads("".join([e["data"] for e in res])),
             }
 
         raise NotImplementedError()
@@ -256,12 +270,28 @@ class Infrastructure(object):
             "payload": payload,
             "final": final, "multipart": multipart, "request_id": request_id,
         })
+        if not res:
+            return None
+        resp = json.loads("".join([e["data"] for e in res]))
+        if "errors" in resp:
+            return {
+                u"module": data["module"],
+                u"action": data["action"],
+                u"kind": u"reply",
+                u"errors": resp["errors"],
+            }
+        if "data" in resp:
+            return {
+                u"module": data["module"],
+                u"action": data["action"],
+                u"kind": u"reply",
+                u"data": resp["data"],
+            }
         return {
             u"module": data["module"],
             u"action": data["action"],
             u"kind": u"reply",
-            u"data": json.loads("".join([e["data"] for e in res])),
-        } if res else None
+        }
 
     def get_notifications(self, old_data=None, filters=[]):
 
