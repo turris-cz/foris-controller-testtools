@@ -1,3 +1,16 @@
+0.4 (2018-06-19)
+----------------
+
+* reflect foris-schema api update
+* ubus: message format update
+* get_uci_module function added
+* mocked update: reflect api changes
+* infrastructure: filters for get_notifications
+* client socket: integrate to infrastructure
+* client socket: more modular
+* mocked updater: more functions and fuctionality added
+* client socket: debug output fix
+
 0.3 (2018-02-27)
 ----------------
 
