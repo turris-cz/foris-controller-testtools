@@ -19,6 +19,7 @@
 
 
 import glob
+import json
 import os
 import pytest
 import shutil
@@ -26,6 +27,7 @@ import subprocess
 
 from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
 from .utils import INIT_SCRIPT_TEST_DIR, set_userlists, set_languages
+
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 FILE_ROOT_PATH = "/tmp/foris_files"
@@ -251,3 +253,42 @@ def updater_languages():
         os.unlink(svupdater.l10n.LANGS_FILE_PATH)
     except Exception:
         pass
+
+
+@pytest.fixture(scope="module")
+def notify_cmd(infrastructure):
+    def notify(module, action, data, validate=True):
+        args = [
+            "bin/foris-notify", "-m", module, "-a", action,
+            infrastructure.name, "--path", infrastructure.notification_sock_path,
+            json.dumps(data)
+        ]
+        if not validate:
+            args.insert(1, "-n")
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        return process.returncode, stdout, stderr
+    yield notify
+
+
+@pytest.fixture(scope="module")
+def notify_api(extra_module_paths, infrastructure):
+    if infrastructure.name == "ubus":
+        from foris_controller.buses.ubus import UbusNotificationSender
+        sender = UbusNotificationSender(infrastructure.notification_sock_path)
+
+    elif infrastructure.name == "unix-socket":
+        from foris_controller.buses.unix_socket import UnixSocketNotificationSender
+        sender = UnixSocketNotificationSender(infrastructure.notification_sock_path)
+
+    def notify(module, action, notification=None, validate=True):
+        from foris_controller.utils import get_validator_dirs
+        from foris_schema import ForisValidator
+        if validate:
+            validator = ForisValidator(*get_validator_dirs([module], extra_module_paths))
+        else:
+            validator = None
+        sender.notify(module, action, notification, validator)
+
+    yield notify
+    sender.disconnect()
