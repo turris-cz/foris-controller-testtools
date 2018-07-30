@@ -134,6 +134,7 @@ DEFAULT_LANGS = {
     "sk": False,
     "hu": False,
     "it": False,
+    "nb_NO": True,
 }
 
 
