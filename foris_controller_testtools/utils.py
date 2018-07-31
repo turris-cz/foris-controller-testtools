@@ -21,6 +21,7 @@
 
 import json
 import os
+import stat
 import svupdater
 import svupdater.lists
 import svupdater.l10n
@@ -263,3 +264,58 @@ def set_userlists(lists=None):
     with open(svupdater.lists.LISTS_FILE_PATH, "w") as f:
         json.dump(lists, f)
         f.flush()
+
+
+class FileFaker(object):
+    def __init__(self, path_prefix, path, executable, content):
+        """ Intializes fake file
+        :param path_prefix: prefixed path (e.g. /path/to/my/custom/root)
+        :type path_prefix: str
+        :param path: actual file path (e.g. /usr/bin/iw)
+        :type path: str
+        :param executable: should the file be executable
+        :type executable: bool
+        :param content: the initial content of the file
+        :type content: str
+        """
+        self.target_path = os.path.join(path_prefix, path.lstrip("/"))
+        self.executable = executable
+        self.content = content
+
+    def store_file(self):
+        """ Stores into file system and updates permissions for the fake file
+        """
+        try:
+            os.makedirs(os.path.dirname(self.target_path))
+        except os.error:
+            pass  # path might already exist
+
+        self.update_content(self.content)
+
+        if self.executable:
+            os.chmod(self.target_path, stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR)
+
+    def get_content(self):
+        """ Reads the current content of the file
+            Might be useful is the file is expected to change
+        """
+        with open(self.target_path) as f:
+            return f.read()
+
+    def update_content(self, new_content):
+        """ Updates the current content of the file
+        """
+        with open(self.target_path, "w") as f:
+            f.write(new_content)
+
+    def cleanup(self):
+        """ Removes targeted file
+        """
+        if os.path.exists(self.target_path):
+            os.unlink(self.target_path)
+
+    def __enter__(self):
+        self.store_file()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.cleanup()
