@@ -21,7 +21,7 @@
 import os
 import json
 
-from exceptions import ExceptionUpdaterApproveInvalid
+from .exceptions import ExceptionUpdaterApproveInvalid
 
 APPROVAL_FILE_PATH = "/tmp/updater-approval-mock.json"
 
