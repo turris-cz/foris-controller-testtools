@@ -381,7 +381,7 @@ def unix_notification_listener():
     class Server(SocketServer.ThreadingMixIn, SocketServer.UnixStreamServer):
         pass
 
-    with open(NOTIFICATIONS_OUTPUT_PATH, "w") as f:
+    with open(NOTIFICATIONS_OUTPUT_PATH, "wb") as f:
         f.flush()
 
         class Handler(SocketServer.StreamRequestHandler):
@@ -394,7 +394,7 @@ def unix_notification_listener():
                     data = self.rfile.read(length)
                     with lock:
                         with notifications_lock:
-                            f.write(data + "\n")
+                            f.write(data + b"\n")
                             f.flush()
 
         server = Server(NOTIFICATION_SOCK_PATH, Handler)
