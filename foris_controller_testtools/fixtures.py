@@ -259,7 +259,7 @@ def updater_languages():
 def notify_cmd(infrastructure):
     def notify(module, action, data, validate=True):
         args = [
-            "bin/foris-notify", "-m", module, "-a", action,
+            "foris-notify", "-m", module, "-a", action,
             infrastructure.name, "--path", infrastructure.notification_sock_path,
             json.dumps(data)
         ]
