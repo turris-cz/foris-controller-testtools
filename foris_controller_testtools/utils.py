@@ -29,6 +29,8 @@ import svupdater.approvals
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
+REBOOT_CALLED_FILE = "/tmp/reboot_called"
+NETWORK_RESTART_CALLED_FILE = "/tmp/network_restart_called"
 
 
 def get_uci_module(lock_backend):
@@ -75,24 +77,13 @@ def check_service_result(name, passed, action):
     os.unlink(path)
 
 
-def sh_was_called(script, args=[], cleanup=True):
-    """ Checks whether a script was called using sh command
-        The sh command should mock shell execution and print its content into SH_CALLED_FILE
-    :param script: script which is checked whether it was called
-    :param script: str
-    :param args: arguments of the script
-    :param args: iterable
-    :param cleanup: remove SH_CALLED_FILE after check
-    :param cleanup: bool
-    :returns: True if script was called
-    """
-
+def _command_was_called(called_file, args, cleanup):
     res = False
     try:
-        with open(SH_CALLED_FILE) as f:
+        with open(called_file) as f:
             lines = f.readlines()
 
-        script_and_args = " ".join([script] + args)
+        script_and_args = " ".join(args)
         for line in lines:
             if script_and_args in line:
                 res = True
@@ -101,11 +92,50 @@ def sh_was_called(script, args=[], cleanup=True):
 
     if cleanup:
         try:
-            os.unlink(SH_CALLED_FILE)
+            os.unlink(called_file)
         except Exception:
             pass
 
     return res
+
+
+def sh_was_called(args=[], cleanup=True):
+    """ Checks whether a script was called using sh command
+        The sh command should mock shell execution and print its content into SH_CALLED_FILE
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove SH_CALLED_FILE after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+
+    return _command_was_called(SH_CALLED_FILE, args, cleanup)
+
+
+def reboot_was_called(args=[], cleanup=True):
+    """ Checks whether a reboot script was called
+    :param script: script which is checked whether it was called
+    :param script: str
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove called file after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+    return _command_was_called(REBOOT_CALLED_FILE, args, cleanup)
+
+
+def network_restart_was_called(args=[], cleanup=True):
+    """ Checks whether a network restart script was called
+    :param script: script which is checked whether it was called
+    :param script: str
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove called file after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+    return _command_was_called(NETWORK_RESTART_CALLED_FILE, args, cleanup)
 
 
 def set_approval(approval=None):

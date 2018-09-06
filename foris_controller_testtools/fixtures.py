@@ -24,9 +24,13 @@ import os
 import pytest
 import shutil
 import subprocess
+import textwrap
 
 from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
-from .utils import INIT_SCRIPT_TEST_DIR, set_userlists, set_languages
+from .utils import (
+    INIT_SCRIPT_TEST_DIR, set_userlists, set_languages, FileFaker,
+    SH_CALLED_FILE, REBOOT_CALLED_FILE, NETWORK_RESTART_CALLED_FILE,
+)
 
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
@@ -292,3 +296,45 @@ def notify_api(extra_module_paths, infrastructure):
 
     yield notify
     sender.disconnect()
+
+
+CALLED_COMMAND_TEMPLATE = """\
+#!/bin/sh
+echo $@ >> %(path)s
+exit 0
+"""
+
+
+@pytest.fixture(scope="function")
+def sh_command(cmdline_script_root):
+    content = CALLED_COMMAND_TEMPLATE % dict(path=SH_CALLED_FILE)
+    with FileFaker(cmdline_script_root, "/bin/sh", True, textwrap.dedent(content)):
+        yield SH_CALLED_FILE
+    try:
+        os.unlink(SH_CALLED_FILE)
+    except:
+        pass
+
+
+@pytest.fixture(scope="function")
+def reboot_command(cmdline_script_root):
+    content = CALLED_COMMAND_TEMPLATE % dict(path=REBOOT_CALLED_FILE)
+    with FileFaker(cmdline_script_root, "/usr/bin/maintain-reboot", True, textwrap.dedent(content)):
+        yield REBOOT_CALLED_FILE
+    try:
+        os.unlink(SH_CALLED_FILE)
+    except:
+        pass
+
+
+@pytest.fixture(scope="function")
+def network_restart_command(cmdline_script_root):
+    content = CALLED_COMMAND_TEMPLATE % dict(path=NETWORK_RESTART_CALLED_FILE)
+    with FileFaker(
+        cmdline_script_root, "/usr/bin/maintain-network-restart", True, textwrap.dedent(content)
+    ):
+        yield NETWORK_RESTART_CALLED_FILE
+    try:
+        os.unlink(SH_CALLED_FILE)
+    except:
+        pass
