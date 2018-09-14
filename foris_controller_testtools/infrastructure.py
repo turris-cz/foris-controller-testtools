@@ -45,10 +45,17 @@ NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
 notifications_lock = Lock()
 
 
+def _wait_for_ubus_module(module, socket_path, timeout=2):
+    import ubus
+    wait_process = subprocess.Popen(
+        ["ubus", "-t", str(timeout), "wait_for", module, "-s", socket_path])
+    wait_process.wait()
+
 class ClientSocket(object):
-    def __init__(self, socket_path):
+    def __init__(self, socket_path, message_bus=None):
         self.socket_path = socket_path
         self.socket = None
+        self.message_bus = message_bus
 
     def connect(self):
         while not os.path.exists(self.socket_path):
@@ -58,12 +65,16 @@ class ClientSocket(object):
         self.socket.connect(self.socket_path)
 
     def close(self):
-        self.socket.close()
+        if self.socket:
+            self.socket.close()
         self.socket = None
 
     def request(self, msg, timeout=3):
         if not self.socket:
             self.connect()
+
+        if self.message_bus == "ubus":
+            _wait_for_ubus_module("foris-controller-%s" % msg.get("module", "?"), UBUS_PATH)
 
         self.socket.settimeout(timeout)
 
@@ -96,7 +107,7 @@ class Infrastructure(object):
         cmdline_script_root, file_root, client_socket_path=None, debug_output=False
     ):
         self.client_socket_path = client_socket_path
-        self.client_socket = ClientSocket(client_socket_path) if client_socket_path else None
+        self.client_socket = ClientSocket(client_socket_path, name) if client_socket_path else None
         try:
             os.unlink(SOCK_PATH)
         except Exception:
@@ -164,10 +175,12 @@ class Infrastructure(object):
         self._exiting.value = True
         self.server.kill()
         self.listener.terminate()
-        try:
-            os.unlink(NOTIFICATIONS_OUTPUT_PATH)
-        except OSError:
-            pass
+        self.client_socket.close()
+        for path in [NOTIFICATIONS_OUTPUT_PATH, self.client_socket_path]:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
         try:
             import ubus  # disconnect from ubus if connected
             ubus.disconnect()
@@ -200,12 +213,10 @@ class Infrastructure(object):
 
         elif self.name == "ubus":
             import ubus
-            module = "foris-controller-%s" % data.get("module", "?")
-            wait_process = subprocess.Popen(
-                ["ubus", "wait_for", module, "-s", self.sock_path])
-            wait_process.wait()
             if not ubus.get_connected():
                 ubus.connect(self.sock_path)
+            module = "foris-controller-%s" % data.get("module", "?")
+            _wait_for_ubus_module(module, self.sock_path)
             function = data.get("action", "?")
             inner_data = data.get("data", None)
             dumped_data = json.dumps(inner_data)
@@ -254,12 +265,10 @@ class Infrastructure(object):
 
     def process_message_ubus_raw(self, data, request_id, final, multipart, multipart_data):
         import ubus
-        module = "foris-controller-%s" % data.get("module", "?")
-        wait_process = subprocess.Popen(
-            ["ubus", "wait_for", module, "-s", self.sock_path])
-        wait_process.wait()
         if not ubus.get_connected():
             ubus.connect(self.sock_path)
+        module = "foris-controller-%s" % data.get("module", "?")
+        _wait_for_ubus_module(data.get("module", "?"), self.sock_path)
         function = data.get("action", "?")
         payload = {}
         if data is not None:
