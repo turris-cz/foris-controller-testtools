@@ -92,8 +92,8 @@ def backend(backend_param):
 def only_backends(request, backend):
     """ Set which backends should be used (others will be skipped)
     """
-    if request.node.get_marker('only_backends'):
-        if backend not in request.node.get_marker('only_backends').args[0]:
+    if request.node.get_closest_marker('only_backends'):
+        if backend not in request.node.get_closest_marker('only_backends').args[0]:
             pytest.skip("unsupported backend for this test '%s'" % backend)
 
 
@@ -107,8 +107,8 @@ def message_bus(request, backend):
 def only_message_buses(request, message_bus):
     """ Set which message buses should be used (others will be skipped)
     """
-    if request.node.get_marker('only_message_buses'):
-        if message_bus not in request.node.get_marker('only_message_buses').args[0]:
+    if request.node.get_closest_marker('only_message_buses'):
+        if message_bus not in request.node.get_closest_marker('only_message_buses').args[0]:
             pytest.skip("unsupported message bus for this test '%s'" % message_bus)
 
 
@@ -166,8 +166,8 @@ def uci_configs_init(request, uci_config_default_path):
     """ Sets directory from where the uci configs should be looaded
         yields path to modified directory and path to original directory
     """
-    if request.node.get_marker('uci_config_path'):
-        dir_path = request.node.get_marker('uci_config_path').args[0]
+    if request.node.get_closest_marker('uci_config_path'):
+        dir_path = request.node.get_closest_marker('uci_config_path').args[0]
     else:
         dir_path = uci_config_default_path
 
@@ -197,8 +197,8 @@ def file_root():
 
 @pytest.fixture(autouse=True, scope="function")
 def file_root_init(request, file_root):
-    if request.node.get_marker('file_root_path'):
-        dir_path = request.node.get_marker('file_root_path').args[0]
+    if request.node.get_closest_marker('file_root_path'):
+        dir_path = request.node.get_closest_marker('file_root_path').args[0]
     else:
         dir_path = file_root
 
