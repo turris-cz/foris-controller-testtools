@@ -338,3 +338,22 @@ def network_restart_command(cmdline_script_root):
         os.unlink(SH_CALLED_FILE)
     except Exception:
         pass
+
+
+@pytest.fixture(scope="function")
+def device(request):
+    DEV_MAP = {
+        "mox": "CZ.NIC Turris Mox Board",
+        "omnia": "Turris Omnia",
+        "turris": "Turris 1.1",
+    }
+
+    device_str = DEV_MAP.get(request.param, "unknown")
+    with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, device_str + "\n"):
+        yield request.param
+
+
+@pytest.fixture(scope="function")
+def turris_os_version(request):
+    with FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, "%s\n" % request.param):
+        yield request.param
