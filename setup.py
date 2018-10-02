@@ -37,11 +37,13 @@ setup(
     license='COPYING',
     description=DESCRIPTION,
     long_description=open('README.rst').read(),
-    requires=[
-        'pytest',
-    ],
+    package_data={
+        'foris_controller_testtools': ['turrishw/*.tar.gz'],
+    },
     install_requires=[
-        "foris-controller",
+        'pytest',
+        'foris-controller',
+        'turrishw',
     ],
     zip_safe=False,
 )

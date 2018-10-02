@@ -312,7 +312,7 @@ def sh_command(cmdline_script_root):
         yield SH_CALLED_FILE
     try:
         os.unlink(SH_CALLED_FILE)
-    except:
+    except Exception:
         pass
 
 
@@ -323,7 +323,7 @@ def reboot_command(cmdline_script_root):
         yield REBOOT_CALLED_FILE
     try:
         os.unlink(SH_CALLED_FILE)
-    except:
+    except Exception:
         pass
 
 
@@ -336,5 +336,5 @@ def network_restart_command(cmdline_script_root):
         yield NETWORK_RESTART_CALLED_FILE
     try:
         os.unlink(SH_CALLED_FILE)
-    except:
+    except Exception:
         pass

@@ -21,16 +21,19 @@
 
 import json
 import os
+import shutil
 import stat
 import svupdater
 import svupdater.lists
 import svupdater.l10n
 import svupdater.approvals
+import tarfile
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
 REBOOT_CALLED_FILE = "/tmp/reboot_called"
 NETWORK_RESTART_CALLED_FILE = "/tmp/network_restart_called"
+TURRISHW_ROOT = "/tmp/turrishw_root/"
 
 
 def get_uci_module(lock_backend):
@@ -349,3 +352,28 @@ class FileFaker(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
+
+
+def prepare_turrishw_root(device, version):
+    if device == "omnia":
+        if version.split(".", 1)[0] == "3":
+            _prepare_turrishw("omnia-3.X")
+        else:
+            _prepare_turrishw("omnia-4.0")
+    elif device == "turris":
+        if version.split(".", 1)[0] == "3":
+            _prepare_turrishw("turris-3.X")
+        else:
+            _prepare_turrishw("turris-4.0")
+    elif device == "mox":
+        _prepare_turrishw("mox+EEC")
+
+
+def _prepare_turrishw(root):
+    try:
+        shutil.rmtree(TURRISHW_ROOT, ignore_errors=True)
+    except Exception:
+        pass
+    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "turrishw", "%s.tar.gz" % root)
+    with tarfile.open(path, "r:gz") as tar:
+        tar.extractall(TURRISHW_ROOT)

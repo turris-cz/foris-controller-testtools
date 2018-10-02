@@ -30,6 +30,8 @@ import struct
 
 from multiprocessing import Process, Value, Lock
 
+from .utils import TURRISHW_ROOT
+
 if sys.version_info < (3, 0):
     import SocketServer
 else:
@@ -121,6 +123,7 @@ class Infrastructure(object):
         os.environ["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
         os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
         os.environ["FORIS_FILE_ROOT"] = file_root
+        os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
 
         self.name = name
         self.backend_name = backend_name
