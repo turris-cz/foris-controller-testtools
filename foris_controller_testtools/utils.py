@@ -242,7 +242,7 @@ DEFAULT_USERLISTS = {
             ' Neobsahuje ovladače pro zařízení.',
             'de': 'Software für die Weiterleitung von Fernsehsignal, welcher mittels'
             ' DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.',
-            'en': 'Software for sharing television received by a DVB tuner on Turris.' 
+            'en': 'Software for sharing television received by a DVB tuner on Turris.'
             ' Does not include device drivers.'
         },
         "title": {
@@ -357,19 +357,19 @@ class FileFaker(object):
 def prepare_turrishw_root(device, version):
     if device == "omnia":
         if version.split(".", 1)[0] == "3":
-            _prepare_turrishw("omnia-3.X")
+            prepare_turrishw("omnia-3.X")
         else:
-            _prepare_turrishw("omnia-4.0")
+            prepare_turrishw("omnia-4.0")
     elif device == "turris":
         if version.split(".", 1)[0] == "3":
-            _prepare_turrishw("turris-3.X")
+            prepare_turrishw("turris-3.X")
         else:
-            _prepare_turrishw("turris-4.0")
+            prepare_turrishw("turris-4.0")
     elif device == "mox":
-        _prepare_turrishw("mox+EEC")
+        prepare_turrishw("mox+EEC")
 
 
-def _prepare_turrishw(root):
+def prepare_turrishw(root):
     try:
         shutil.rmtree(TURRISHW_ROOT, ignore_errors=True)
     except Exception:
