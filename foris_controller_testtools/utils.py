@@ -70,14 +70,30 @@ def match_subdict(expected_data, obtained_data):
     return True
 
 
-def check_service_result(name, passed, action):
+def check_service_result(name, action, passed=None, clean=True, expected_found=True):
     path = os.path.join(INIT_SCRIPT_TEST_DIR, name)
-    with open(path) as f:
-        obtained_passed, obtained_action = f.read().strip().split(" ")
-    expected_passed = "passed" if passed else "failed"
-    assert obtained_passed == expected_passed
-    assert action == obtained_action
-    os.unlink(path)
+    try:
+        with open(path) as f:
+            lines = f.readlines()
+    except IOError:
+        lines = []
+
+    if passed is not None:
+        expected_passed = "passed" if passed else "failed"
+    else:
+        expected_passed = None
+
+    found = False
+    for line in lines:
+        obtained_passed, obtained_action = line.strip().split(" ")
+        if (expected_passed is None or obtained_passed == expected_passed)\
+                and action == obtained_action:
+            found = True
+
+    if clean:
+        os.unlink(path)
+
+    assert found is expected_found
 
 
 def _command_was_called(called_file, args, cleanup):
