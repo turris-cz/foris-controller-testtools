@@ -91,7 +91,8 @@ def check_service_result(name, action, passed=None, clean=True, expected_found=T
             found = True
 
     if clean:
-        os.unlink(path)
+        if os.path.exists(path):
+            os.unlink(path)
 
     assert found is expected_found
 
