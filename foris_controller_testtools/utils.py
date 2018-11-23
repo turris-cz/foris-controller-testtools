@@ -23,10 +23,10 @@ import json
 import os
 import shutil
 import stat
-import svupdater
-import svupdater.lists
-import svupdater.l10n
-import svupdater.approvals
+from . import svupdater
+from .svupdater import lists as svupdater_lists
+from .svupdater import l10n as svupdater_l10n
+from .svupdater import approvals as svupdater_approvals
 import tarfile
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
@@ -165,11 +165,11 @@ def set_approval(approval=None):
     """
     if approval is None:
         try:
-            os.unlink(svupdater.approvals.APPROVAL_FILE_PATH)
+            os.unlink(svupdater_approvals.APPROVAL_FILE_PATH)
         except Exception:
             pass
     else:
-        with open(svupdater.approvals.APPROVAL_FILE_PATH, "w") as f:
+        with open(svupdater_approvals.APPROVAL_FILE_PATH, "w") as f:
             json.dump(approval, f)
             f.flush()
 
@@ -196,7 +196,7 @@ def set_languages(langs=None):
     """
     if not langs:
         langs = DEFAULT_LANGS
-    with open(svupdater.l10n.LANGS_FILE_PATH, "w") as f:
+    with open(svupdater_l10n.LANGS_FILE_PATH, "w") as f:
         json.dump(langs, f)
         f.flush()
 
@@ -311,7 +311,7 @@ def set_userlists(lists=None):
     if not lists:
         lists = DEFAULT_USERLISTS
 
-    with open(svupdater.lists.LISTS_FILE_PATH, "w") as f:
+    with open(svupdater_lists.LISTS_FILE_PATH, "w") as f:
         json.dump(lists, f)
         f.flush()
 

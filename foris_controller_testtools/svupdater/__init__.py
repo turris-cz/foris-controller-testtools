@@ -36,5 +36,5 @@ def run(hooklist=[]):
     if hooklist:
         register(hooklist[0])
 
-    subprocess.Popen(["python", "-m", "svupdater"])
+    subprocess.Popen(["python", "-m", "foris_controller_testtools.svupdater"])
     return True

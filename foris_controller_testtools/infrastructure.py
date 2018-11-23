@@ -124,6 +124,7 @@ class Infrastructure(object):
         os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
         os.environ["FORIS_FILE_ROOT"] = file_root
         os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
+        os.environ["FC_UPDATER_MODULE"] = "foris_controller_testtools.svupdater"
 
         self.name = name
         self.backend_name = backend_name
