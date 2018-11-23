@@ -41,9 +41,9 @@ setup(
         'foris_controller_testtools': ['turrishw/*.tar.gz'],
     },
     install_requires=[
-        'pytest',
-        'foris-controller',
-        'turrishw',
+        "pytest",
+        "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller.git",
+        "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],
     zip_safe=False,
 )
