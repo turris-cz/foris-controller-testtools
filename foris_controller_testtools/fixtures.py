@@ -59,7 +59,6 @@ def init_script_result():
 
     yield INIT_SCRIPT_TEST_DIR
 
-    return
     try:
         shutil.rmtree(INIT_SCRIPT_TEST_DIR, ignore_errors=True)
     except Exception:
