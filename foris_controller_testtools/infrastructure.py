@@ -24,10 +24,13 @@ import os
 import socket
 import sys
 import time
-import uuid
+import re
 import subprocess
 import struct
+import uuid
 
+
+from paho.mqtt import client as mqtt
 from multiprocessing import Process, Value, Lock
 
 from .utils import TURRISHW_ROOT
@@ -43,6 +46,9 @@ SOCK_PATH = "/tmp/foris-controller-test.soc"
 UBUS_PATH = "/tmp/ubus-foris-controller-test.soc"
 NOTIFICATION_SOCK_PATH = "/tmp/foris-controller-notifications-test.soc"
 NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
+MQTT_HOST = "localhost"
+MQTT_PORT = 11883
+MQTT_ID = os.environ.get("TEST_CLIENT_ID", "%012x" % uuid.getnode())
 
 notifications_lock = Lock()
 
@@ -52,6 +58,7 @@ def _wait_for_ubus_module(module, socket_path, timeout=2):
     wait_process = subprocess.Popen(
         ["ubus", "-t", str(timeout), "wait_for", module, "-s", socket_path])
     wait_process.wait()
+
 
 class ClientSocket(object):
     def __init__(self, socket_path, message_bus=None):
@@ -106,7 +113,7 @@ class Infrastructure(object):
 
     def __init__(
         self, name, backend_name, modules, extra_module_paths, uci_config_dir,
-        cmdline_script_root, file_root, client_socket_path=None, debug_output=False
+        cmdline_script_root, file_root, client_socket_path=None, debug_output=False,
     ):
         self.client_socket_path = client_socket_path
         self.client_socket = ClientSocket(client_socket_path, name) if client_socket_path else None
@@ -128,7 +135,7 @@ class Infrastructure(object):
 
         self.name = name
         self.backend_name = backend_name
-        if name not in ["unix-socket", "ubus"]:
+        if name not in ["unix-socket", "ubus", "mqtt"]:
             raise NotImplementedError()
         if backend_name not in ["openwrt", "mock"]:
             raise NotImplementedError()
@@ -154,6 +161,9 @@ class Infrastructure(object):
         elif name == "ubus":
             self.listener = Process(target=ubus_notification_listener, args=(self._exiting, ))
             self.listener.start()
+        elif name == "mqtt":
+            self.listener = Process(target=mqtt_notification_listener, args=(MQTT_HOST, MQTT_PORT))
+            self.listener.start()
 
         modules = list(itertools.chain.from_iterable([("-m", e) for e in modules]))
         extra_paths = list(itertools.chain.from_iterable(
@@ -163,17 +173,29 @@ class Infrastructure(object):
         args = [
             "foris-controller",
         ] + modules + extra_paths + client_socket_option + [
-            "-d", "-b", backend_name, name, "--path", self.sock_path
+            "-d", "-b", backend_name, name
         ]
 
         if name == "unix-socket":
+            args.append("--path")
+            args.append(self.sock_path)
             args.append("--notifications-path")
             args.append(NOTIFICATION_SOCK_PATH)
             self.notification_sock_path = NOTIFICATION_SOCK_PATH
-        else:
+        elif name == "ubus":
+            args.append("--path")
+            args.append(self.sock_path)
             self.notification_sock_path = self.sock_path
+        elif name == "mqtt":
+            args.append("--host")
+            args.append(MQTT_HOST)
+            args.append("--port")
+            args.append(str(MQTT_PORT))
+            self.notification_host = MQTT_HOST
+            self.notification_port = MQTT_PORT
 
         self.server = subprocess.Popen(args, **kwargs)
+        self.connected = False
 
     def exit(self):
         self._exiting.value = True
@@ -195,6 +217,24 @@ class Infrastructure(object):
     def chunks(data, size):
         for i in range(0, len(data), size):
             yield data[i:i + size]
+
+    def wait_mqtt_connected(self):
+        if not self.connected:
+
+            def on_connect(client, userdata, flags, rc):
+                client.subscribe("foris-controller/started")
+
+            def on_message(client, userdata, msg):
+                client.loop_stop(True)
+
+            client = mqtt.Client()
+            client.on_connect = on_connect
+            client.on_message = on_message
+            client.connect(MQTT_HOST, MQTT_PORT, 30)
+            client.loop_start()
+            client._thread.join(10)
+            client.disconnect()
+            self.connected = True
 
     def process_message(self, data):
         if self.name == "unix-socket":
@@ -265,7 +305,45 @@ class Infrastructure(object):
                 u"kind": u"reply",
             }
 
-        raise NotImplementedError()
+        elif self.name == "mqtt":
+            self.wait_mqtt_connected()
+
+            output = {}
+            msg_id = uuid.uuid1()
+
+            reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id,)
+            publish_topic = "foris-controller/%s/request/%s/action/%s" % (
+                MQTT_ID, data["module"], data["action"],
+            )
+
+            msg = {
+                'reply_topic': reply_topic,
+            }
+            if "data" in data:
+                msg["data"] = data["data"]
+
+            def on_message(client, userdata, msg):
+                output.update(json.loads(msg.payload))
+                client.disconnect()
+                client.loop_stop(True)
+
+            def on_connect(client, userdata, flags, rc):
+                client.subscribe(reply_topic)
+
+            def on_subscribe(client, userdata, mid, granted_qos):
+                client.publish(publish_topic, json.dumps(msg))
+
+            client = mqtt.Client()
+            client.on_connect = on_connect
+            client.on_message = on_message
+            client.on_subscribe = on_subscribe
+            client.connect(MQTT_HOST, MQTT_PORT, 30)
+            client.loop_start()
+            client._thread.join(30)
+            return output
+
+        else:
+            raise NotImplementedError()
 
     def process_message_ubus_raw(self, data, request_id, final, multipart, multipart_data):
         import ubus
@@ -370,6 +448,59 @@ def ubus_notification_listener(exiting):
             ubus.loop(200)
             if exiting.value:
                 break
+
+
+def mqtt_notification_listener(host, port):
+    import prctl
+    import signal
+    prctl.set_pdeathsig(signal.SIGKILL)
+    import ubus
+
+    global notifications_lock
+
+    try:
+        os.unlink(NOTIFICATIONS_OUTPUT_PATH)
+    except OSError:
+        if os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
+            raise
+
+    with open(NOTIFICATIONS_OUTPUT_PATH, "w") as f:
+        f.flush()
+
+        def on_connect(client, userdata, flags, rc):
+            client.subscribe(
+                "foris-controller/%s/notification/+/action/+" % os.environ.get(
+                    "TEST_CLIENT_ID", "+"
+                )
+            )
+
+        def on_message(client, userdata, msg):
+            try:
+                parsed = json.loads(msg.payload)
+            except Exception:
+                return
+
+            match = re.match(
+                r"^foris-controller/[^/]+/notification/([^/]+)/action/([^/]+)$", msg.topic)
+
+            if match:
+                module, action = match.group(1, 2)
+                msg = {
+                    "module": module,
+                    "action": action,
+                    "kind": "notification",
+                }
+                if 'data' in parsed:
+                    msg['data'] = parsed['data']
+                with notifications_lock:
+                    f.write(json.dumps(msg) + "\n")
+                    f.flush()
+
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.connect(host, port)
+        client.loop_forever()
 
 
 def unix_notification_listener():

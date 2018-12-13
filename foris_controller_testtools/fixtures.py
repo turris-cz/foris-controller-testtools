@@ -26,7 +26,9 @@ import shutil
 import subprocess
 import textwrap
 
-from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH
+from .infrastructure import (
+    Infrastructure, SOCK_PATH, UBUS_PATH, MQTT_HOST, MQTT_PORT
+)
 from .utils import (
     INIT_SCRIPT_TEST_DIR, set_userlists, set_languages, FileFaker,
     SH_CALLED_FILE, REBOOT_CALLED_FILE, NETWORK_RESTART_CALLED_FILE,
@@ -81,6 +83,14 @@ def ubusd_test(ubusd_acl_path):
         pass
 
 
+@pytest.fixture(scope="session")
+def mosquitto_test(ubusd_acl_path):
+    mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
+    mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)])
+    yield mosquitto_instance
+    mosquitto_instance.kill()
+
+
 @pytest.fixture(scope="module")
 def backend(backend_param):
     """ The backend name obtained via cmd line args"""
@@ -96,7 +106,7 @@ def only_backends(request, backend):
             pytest.skip("unsupported backend for this test '%s'" % backend)
 
 
-@pytest.fixture(params=["unix-socket", "ubus"], scope="module")
+@pytest.fixture(params=["unix-socket", "ubus", "mqtt"], scope="module")
 def message_bus(request, backend):
     """ Message bus name (parametrized fixture) """
     return request.param
@@ -263,9 +273,18 @@ def notify_cmd(infrastructure):
     def notify(module, action, data, validate=True):
         args = [
             "foris-notify", "-m", module, "-a", action,
-            infrastructure.name, "--path", infrastructure.notification_sock_path,
-            json.dumps(data)
         ]
+        if infrastructure.name in ["ubus", "unix-socket"]:
+            args.extend([
+                infrastructure.name, "--path", infrastructure.notification_sock_path,
+            ])
+        elif infrastructure.name in ["mqtt"]:
+            args.extend([
+                infrastructure.name, "--host", MQTT_HOST, "--port", str(MQTT_PORT),
+            ])
+
+        args.append(json.dumps(data))
+
         if not validate:
             args.insert(1, "-n")
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -283,6 +302,10 @@ def notify_api(extra_module_paths, infrastructure):
     elif infrastructure.name == "unix-socket":
         from foris_controller.buses.unix_socket import UnixSocketNotificationSender
         sender = UnixSocketNotificationSender(infrastructure.notification_sock_path)
+
+    elif infrastructure.name == "mqtt":
+        from foris_controller.buses.mqtt import MqttNotificationSender
+        sender = MqttNotificationSender(MQTT_HOST, MQTT_PORT)
 
     def notify(module, action, notification=None, validate=True):
         from foris_controller.utils import get_validator_dirs
