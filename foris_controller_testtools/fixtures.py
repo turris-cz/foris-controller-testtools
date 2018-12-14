@@ -84,11 +84,16 @@ def ubusd_test(ubusd_acl_path):
 
 
 @pytest.fixture(scope="session")
-def mosquitto_test(ubusd_acl_path):
+def mosquitto_test():
     mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
     mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)])
     yield mosquitto_instance
     mosquitto_instance.kill()
+
+
+@pytest.fixture(scope="session")
+def start_buses(ubusd_test, mosquitto_test):
+    yield ubusd_test, mosquitto_test
 
 
 @pytest.fixture(scope="module")
