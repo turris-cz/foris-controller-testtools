@@ -68,13 +68,8 @@ def init_script_result():
 
 
 @pytest.fixture(scope="session")
-def ubusd_acl_path():
-    _override_exception("should return a path to ubus acl directory")
-
-
-@pytest.fixture(scope="session")
-def ubusd_test(ubusd_acl_path):
-    ubusd_instance = subprocess.Popen(["ubusd", "-A", ubusd_acl_path, "-s", UBUS_PATH])
+def ubusd_test():
+    ubusd_instance = subprocess.Popen(["ubusd", "-s", UBUS_PATH])
     yield ubusd_instance
     ubusd_instance.kill()
     try:
