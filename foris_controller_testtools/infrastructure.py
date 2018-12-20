@@ -127,12 +127,6 @@ class Infrastructure(object):
             except Exception:
                 pass
 
-        os.environ["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
-        os.environ["FORIS_CMDLINE_ROOT"] = cmdline_script_root
-        os.environ["FORIS_FILE_ROOT"] = file_root
-        os.environ["TURRISHW_ROOT"] = TURRISHW_ROOT
-        os.environ["FC_UPDATER_MODULE"] = "foris_controller_testtools.svupdater"
-
         self.name = name
         self.backend_name = backend_name
         if name not in ["unix-socket", "ubus", "mqtt"]:
@@ -146,7 +140,14 @@ class Infrastructure(object):
             while not os.path.exists(self.sock_path):
                 time.sleep(0.3)
 
-        kwargs = {}
+        new_env = dict(os.environ)
+        new_env["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
+        new_env["FORIS_CMDLINE_ROOT"] = cmdline_script_root
+        new_env["FORIS_FILE_ROOT"] = file_root
+        new_env["TURRISHW_ROOT"] = TURRISHW_ROOT
+        new_env["FC_UPDATER_MODULE"] = "foris_controller_testtools.svupdater"
+
+        kwargs = {'env': new_env}
         if not debug_output:
             devnull = open(os.devnull, 'wb')
             kwargs['stderr'] = devnull
