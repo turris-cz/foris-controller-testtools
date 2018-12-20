@@ -106,10 +106,10 @@ def only_backends(request, backend):
             pytest.skip("unsupported backend for this test '%s'" % backend)
 
 
-@pytest.fixture(params=["unix-socket", "ubus", "mqtt"], scope="module")
-def message_bus(request, backend):
-    """ Message bus name (parametrized fixture) """
-    return request.param
+@pytest.fixture(scope="module")
+def message_bus(message_bus_param):
+    """ Message bus name obtained via cmdline"""
+    return message_bus_param
 
 
 @pytest.fixture(autouse=True)
