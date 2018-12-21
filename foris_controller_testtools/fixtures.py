@@ -79,9 +79,16 @@ def ubusd_test():
 
 
 @pytest.fixture(scope="session")
-def mosquitto_test():
+def mosquitto_test(request):
+
+    kwargs = {}
+    if not request.config.getoption("--debug-output"):
+        devnull = open(os.devnull, 'wb')
+        kwargs['stderr'] = devnull
+        kwargs['stdout'] = devnull
+
     mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
-    mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)])
+    mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)], **kwargs)
     yield mosquitto_instance
     mosquitto_instance.kill()
 
