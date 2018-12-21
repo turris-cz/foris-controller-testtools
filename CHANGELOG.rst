@@ -1,3 +1,20 @@
+0.5 (2018-12-21)
+----------------
+
+* fix env variables handling
+* make message bus configurable via cmdline
+* ubusd_acl support removed
+* mqtt bus support added
+* mocked updater changes
+* use PEP508 dependencies
+* check_service_result updated
+* device and turris_os_version parametrized fixtures added
+* turrishw integration
+* newtwork_restart and reboot fixtures added
+* python3 compatibility fixes
+* FileFaker class added
+* notify api added
+
 0.4 (2018-06-19)
 ----------------
 
