@@ -1,6 +1,6 @@
 #
 # foris-controller-testtools
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -223,7 +223,7 @@ class Infrastructure(object):
         if not self.connected:
 
             def on_connect(client, userdata, flags, rc):
-                client.subscribe("foris-controller/advertize")
+                client.subscribe(f"foris-controller/{MQTT_ID}/notification/remote/action/advertize")
 
             def on_message(client, userdata, msg):
                 try:
