@@ -48,7 +48,7 @@ NOTIFICATION_SOCK_PATH = "/tmp/foris-controller-notifications-test.soc"
 NOTIFICATIONS_OUTPUT_PATH = "/tmp/foris-controller-notifications-test.json"
 MQTT_HOST = "localhost"
 MQTT_PORT = 11883
-MQTT_ID = os.environ.get("TEST_CLIENT_ID", "%012x" % uuid.getnode())
+MQTT_ID = os.environ.get("TEST_CLIENT_ID", f"{uuid.getnode():012x}")
 
 notifications_lock = Lock()
 
@@ -322,7 +322,7 @@ class Infrastructure(object):
             )
 
             msg = {
-                'reply_topic': reply_topic,
+                'reply_msg_id': str(msg_id),
             }
             if "data" in data:
                 msg["data"] = data["data"]
