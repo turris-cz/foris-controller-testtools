@@ -23,7 +23,7 @@ import json
 LISTS_FILE_PATH = "/tmp/updater-mock-lists.json"
 
 
-def userlists(lang):
+def pkglists(lang):
     with open(LISTS_FILE_PATH) as f:
         data = json.load(f)
 
@@ -39,16 +39,7 @@ def userlists(lang):
     return res
 
 
-def set_userlist(name, enabled):
-    with open(LISTS_FILE_PATH) as f:
-        data = json.load(f)
-    data[name]["enabled"] = enabled
-    with open(LISTS_FILE_PATH, "w") as f:
-        json.dump(data, f)
-        f.flush()
-
-
-def update_userlists(lists):
+def update_pkglists(lists):
     with open(LISTS_FILE_PATH) as f:
         data = json.load(f)
     for name in data.keys():

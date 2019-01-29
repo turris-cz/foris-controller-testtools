@@ -24,3 +24,7 @@ AFTER_HOOK_INDICATOR = "/tmp/updater-after-hook"
 def register(command):
     with open(AFTER_HOOK_INDICATOR, "w") as f:
         f.flush()
+
+
+def register_list(commands):
+    pass
