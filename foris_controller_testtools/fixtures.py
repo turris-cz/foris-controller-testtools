@@ -312,7 +312,7 @@ def notify_api(extra_module_paths, infrastructure):
 
     elif infrastructure.name == "mqtt":
         from foris_controller.buses.mqtt import MqttNotificationSender
-        sender = MqttNotificationSender(MQTT_HOST, MQTT_PORT)
+        sender = MqttNotificationSender(MQTT_HOST, MQTT_PORT, None)
 
     def notify(module, action, notification=None, validate=True):
         from foris_controller.utils import get_validator_dirs
