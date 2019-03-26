@@ -1,4 +1,4 @@
-stored_enabled = True
+stored_enabled = None
 stored_approvals = False
 stored_auto_approve_time = 0
 
