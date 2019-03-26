@@ -351,7 +351,7 @@ def reboot_command(cmdline_script_root):
     with FileFaker(cmdline_script_root, "/usr/bin/maintain-reboot", True, textwrap.dedent(content)):
         yield REBOOT_CALLED_FILE
     try:
-        os.unlink(SH_CALLED_FILE)
+        os.unlink(REBOOT_CALLED_FILE)
     except Exception:
         pass
 
@@ -364,7 +364,7 @@ def network_restart_command(cmdline_script_root):
     ):
         yield NETWORK_RESTART_CALLED_FILE
     try:
-        os.unlink(SH_CALLED_FILE)
+        os.unlink(NETWORK_RESTART_CALLED_FILE)
     except Exception:
         pass
 

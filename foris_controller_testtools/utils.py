@@ -19,6 +19,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import time
 import json
 import os
 import shutil
@@ -119,6 +120,13 @@ def _command_was_called(called_file, args, cleanup):
     return res
 
 
+def _delay_till_file_exists(path, step=0.1, count=10):
+    for _ in range(count):
+        if os.path.exists(path):
+            break
+        time.sleep(step)
+
+
 def sh_was_called(args=[], cleanup=True):
     """ Checks whether a script was called using sh command
         The sh command should mock shell execution and print its content into SH_CALLED_FILE
@@ -128,7 +136,6 @@ def sh_was_called(args=[], cleanup=True):
     :param cleanup: bool
     :returns: True if script was called
     """
-
     return _command_was_called(SH_CALLED_FILE, args, cleanup)
 
 
@@ -142,6 +149,7 @@ def reboot_was_called(args=[], cleanup=True):
     :param cleanup: bool
     :returns: True if script was called
     """
+    _delay_till_file_exists(REBOOT_CALLED_FILE)
     return _command_was_called(REBOOT_CALLED_FILE, args, cleanup)
 
 
@@ -155,6 +163,7 @@ def network_restart_was_called(args=[], cleanup=True):
     :param cleanup: bool
     :returns: True if script was called
     """
+    _delay_till_file_exists(NETWORK_RESTART_CALLED_FILE)
     return _command_was_called(NETWORK_RESTART_CALLED_FILE, args, cleanup)
 
 
