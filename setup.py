@@ -45,5 +45,9 @@ setup(
         "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller.git",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],
+    dependency_links=[
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller.git#egg=foris-controller",
+        "git+https://gitlab.labs.nic.cz/turris/turrishw.git#egg=turrishw",
+    ],
     zip_safe=False,
 )
