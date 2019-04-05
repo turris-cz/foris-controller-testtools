@@ -24,7 +24,6 @@ import json
 import os
 import shutil
 import stat
-from . import svupdater
 from .svupdater import lists as svupdater_lists
 from .svupdater import l10n as svupdater_l10n
 from .svupdater import approvals as svupdater_approvals
@@ -34,6 +33,7 @@ INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
 REBOOT_CALLED_FILE = "/tmp/reboot_called"
 NETWORK_RESTART_CALLED_FILE = "/tmp/network_restart_called"
+LIGHTTPD_RESTART_CALLED_FILE = "/tmp/lighttpd_restart_called"
 TURRISHW_ROOT = "/tmp/turrishw_root/"
 
 
@@ -141,8 +141,6 @@ def sh_was_called(args=[], cleanup=True):
 
 def reboot_was_called(args=[], cleanup=True):
     """ Checks whether a reboot script was called
-    :param script: script which is checked whether it was called
-    :param script: str
     :param args: arguments of the script
     :param args: iterable
     :param cleanup: remove called file after check
@@ -155,8 +153,6 @@ def reboot_was_called(args=[], cleanup=True):
 
 def network_restart_was_called(args=[], cleanup=True):
     """ Checks whether a network restart script was called
-    :param script: script which is checked whether it was called
-    :param script: str
     :param args: arguments of the script
     :param args: iterable
     :param cleanup: remove called file after check
@@ -165,6 +161,17 @@ def network_restart_was_called(args=[], cleanup=True):
     """
     _delay_till_file_exists(NETWORK_RESTART_CALLED_FILE)
     return _command_was_called(NETWORK_RESTART_CALLED_FILE, args, cleanup)
+
+def lighttpd_restart_was_called(args=[], cleanup=True):
+    """ Checks whether a lighttpd restart script was called
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove called file after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+    _delay_till_file_exists(LIGHTTPD_RESTART_CALLED_FILE)
+    return _command_was_called(LIGHTTPD_RESTART_CALLED_FILE, args, cleanup)
 
 
 def set_approval(approval=None):

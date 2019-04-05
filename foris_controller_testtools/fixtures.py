@@ -32,6 +32,7 @@ from .infrastructure import (
 from .utils import (
     INIT_SCRIPT_TEST_DIR, set_userlists, set_languages, FileFaker,
     SH_CALLED_FILE, REBOOT_CALLED_FILE, NETWORK_RESTART_CALLED_FILE,
+    LIGHTTPD_RESTART_CALLED_FILE
 )
 
 
@@ -365,6 +366,19 @@ def network_restart_command(cmdline_script_root):
         yield NETWORK_RESTART_CALLED_FILE
     try:
         os.unlink(NETWORK_RESTART_CALLED_FILE)
+    except Exception:
+        pass
+
+
+@pytest.fixture(scope="function")
+def lighttpd_restart_command(cmdline_script_root):
+    content = CALLED_COMMAND_TEMPLATE % dict(path=LIGHTTPD_RESTART_CALLED_FILE)
+    with FileFaker(
+        cmdline_script_root, "/usr/bin/maintain-lighttpd-restart", True, textwrap.dedent(content)
+    ):
+        yield LIGHTTPD_RESTART_CALLED_FILE
+    try:
+        os.unlink(LIGHTTPD_RESTART_CALLED_FILE)
     except Exception:
         pass
 
