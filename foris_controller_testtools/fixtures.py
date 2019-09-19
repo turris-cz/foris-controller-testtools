@@ -149,6 +149,13 @@ def extra_module_paths():
 
 
 @pytest.fixture(scope="module")
+def env_overrides():
+    """ List of env variables to be used with foris-controller (running within Infrastructure)
+    """
+    return {}  # by default return an empty dict test should override this fixture
+
+
+@pytest.fixture(scope="module")
 def cmdline_script_root():
     _override_exception(
         "should return a path to a script root dir which are run within cmdline backend"
@@ -157,7 +164,13 @@ def cmdline_script_root():
 
 @pytest.fixture(scope="module")
 def infrastructure(
-    request, backend, message_bus, controller_modules, extra_module_paths, cmdline_script_root
+    request,
+    backend,
+    message_bus,
+    controller_modules,
+    extra_module_paths,
+    cmdline_script_root,
+    env_overrides,
 ):
     instance = Infrastructure(
         message_bus,
@@ -169,6 +182,7 @@ def infrastructure(
         FILE_ROOT_PATH,
         CLIENT_SOCKET_PATH,
         debug_output=request.config.getoption("--debug-output"),
+        env_overrides=env_overrides,
     )
     yield instance
     instance.exit()

@@ -124,6 +124,7 @@ class Infrastructure(object):
         file_root,
         client_socket_path=None,
         debug_output=False,
+        env_overrides={},
     ):
         self.client_socket_path = client_socket_path
         self.client_socket = ClientSocket(client_socket_path, name) if client_socket_path else None
@@ -156,6 +157,8 @@ class Infrastructure(object):
         new_env["FORIS_FILE_ROOT"] = file_root
         new_env["TURRISHW_ROOT"] = TURRISHW_ROOT
         new_env["FC_UPDATER_MODULE"] = "foris_controller_testtools.svupdater"
+
+        new_env.update(env_overrides)
 
         kwargs = {"env": new_env}
         if not debug_output:
