@@ -26,24 +26,28 @@ import shutil
 import subprocess
 import textwrap
 
-from .infrastructure import (
-    Infrastructure, SOCK_PATH, UBUS_PATH, MQTT_HOST, MQTT_PORT
-)
+from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH, MQTT_HOST, MQTT_PORT
 from .utils import (
-    INIT_SCRIPT_TEST_DIR, set_userlists, set_languages, FileFaker,
-    SH_CALLED_FILE, REBOOT_CALLED_FILE, NETWORK_RESTART_CALLED_FILE,
-    LIGHTTPD_RESTART_CALLED_FILE
+    INIT_SCRIPT_TEST_DIR,
+    set_userlists,
+    set_languages,
+    FileFaker,
+    SH_CALLED_FILE,
+    REBOOT_CALLED_FILE,
+    NETWORK_RESTART_CALLED_FILE,
+    LIGHTTPD_RESTART_CALLED_FILE,
 )
 
 
 UCI_CONFIG_DIR_PATH = "/tmp/uci_configs"
 FILE_ROOT_PATH = "/tmp/foris_files"
 CLIENT_SOCKET_PATH = "/tmp/foris-controller-client-socket.soc"
-REBOOT_INDICATOR_PATH = '/tmp/device-reboot-required'
+REBOOT_INDICATOR_PATH = "/tmp/device-reboot-required"
 
 
 def _override_exception(instructions):
     import inspect
+
     name = inspect.stack()[1][3]
     raise NotImplementedError("Override fixture '%s' in conftest.py: %s" % (name, instructions))
 
@@ -84,9 +88,9 @@ def mosquitto_test(request):
 
     kwargs = {}
     if not request.config.getoption("--debug-output"):
-        devnull = open(os.devnull, 'wb')
-        kwargs['stderr'] = devnull
-        kwargs['stdout'] = devnull
+        devnull = open(os.devnull, "wb")
+        kwargs["stderr"] = devnull
+        kwargs["stdout"] = devnull
 
     mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
     mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)], **kwargs)
@@ -109,8 +113,8 @@ def backend(backend_param):
 def only_backends(request, backend):
     """ Set which backends should be used (others will be skipped)
     """
-    if request.node.get_closest_marker('only_backends'):
-        if backend not in request.node.get_closest_marker('only_backends').args[0]:
+    if request.node.get_closest_marker("only_backends"):
+        if backend not in request.node.get_closest_marker("only_backends").args[0]:
             pytest.skip("unsupported backend for this test '%s'" % backend)
 
 
@@ -124,8 +128,8 @@ def message_bus(message_bus_param):
 def only_message_buses(request, message_bus):
     """ Set which message buses should be used (others will be skipped)
     """
-    if request.node.get_closest_marker('only_message_buses'):
-        if message_bus not in request.node.get_closest_marker('only_message_buses').args[0]:
+    if request.node.get_closest_marker("only_message_buses"):
+        if message_bus not in request.node.get_closest_marker("only_message_buses").args[0]:
             pytest.skip("unsupported message bus for this test '%s'" % message_bus)
 
 
@@ -147,7 +151,8 @@ def extra_module_paths():
 @pytest.fixture(scope="module")
 def cmdline_script_root():
     _override_exception(
-        "should return a path to a script root dir which are run within cmdline backend")
+        "should return a path to a script root dir which are run within cmdline backend"
+    )
 
 
 @pytest.fixture(scope="module")
@@ -155,9 +160,15 @@ def infrastructure(
     request, backend, message_bus, controller_modules, extra_module_paths, cmdline_script_root
 ):
     instance = Infrastructure(
-        message_bus, backend, controller_modules, extra_module_paths, UCI_CONFIG_DIR_PATH,
-        cmdline_script_root, FILE_ROOT_PATH, CLIENT_SOCKET_PATH,
-        debug_output=request.config.getoption("--debug-output")
+        message_bus,
+        backend,
+        controller_modules,
+        extra_module_paths,
+        UCI_CONFIG_DIR_PATH,
+        cmdline_script_root,
+        FILE_ROOT_PATH,
+        CLIENT_SOCKET_PATH,
+        debug_output=request.config.getoption("--debug-output"),
     )
     yield instance
     instance.exit()
@@ -167,9 +178,11 @@ def infrastructure(
 def lock_backend(request):
     if request.param == "threading":
         import threading
+
         yield threading
     elif request.param == "multiprocessing":
         import multiprocessing
+
         yield multiprocessing
 
 
@@ -183,8 +196,8 @@ def uci_configs_init(request, uci_config_default_path):
     """ Sets directory from where the uci configs should be looaded
         yields path to modified directory and path to original directory
     """
-    if request.node.get_closest_marker('uci_config_path'):
-        dir_path = request.node.get_closest_marker('uci_config_path').args[0]
+    if request.node.get_closest_marker("uci_config_path"):
+        dir_path = request.node.get_closest_marker("uci_config_path").args[0]
     else:
         dir_path = uci_config_default_path
 
@@ -208,14 +221,13 @@ def uci_configs_init(request, uci_config_default_path):
 
 @pytest.fixture(scope="module")
 def file_root():
-    _override_exception(
-        "should return a path to a file root dir which are run within file backend")
+    _override_exception("should return a path to a file root dir which are run within file backend")
 
 
 @pytest.fixture(autouse=True, scope="function")
 def file_root_init(request, file_root):
-    if request.node.get_closest_marker('file_root_path'):
-        dir_path = request.node.get_closest_marker('file_root_path').args[0]
+    if request.node.get_closest_marker("file_root_path"):
+        dir_path = request.node.get_closest_marker("file_root_path").args[0]
     else:
         dir_path = file_root
 
@@ -245,6 +257,7 @@ def clean_reboot_indicator():
 @pytest.fixture(scope="function")
 def updater_userlists():
     from .svupdater import lists
+
     try:
         os.unlink(lists.LISTS_FILE_PATH)
     except Exception:
@@ -262,6 +275,7 @@ def updater_userlists():
 @pytest.fixture(scope="function")
 def updater_languages():
     from .svupdater import l10n
+
     try:
         os.unlink(l10n.LANGS_FILE_PATH)
     except Exception:
@@ -279,17 +293,11 @@ def updater_languages():
 @pytest.fixture(scope="module")
 def notify_cmd(infrastructure):
     def notify(module, action, data, validate=True):
-        args = [
-            "foris-notify", "-m", module, "-a", action,
-        ]
+        args = ["foris-notify", "-m", module, "-a", action]
         if infrastructure.name in ["ubus", "unix-socket"]:
-            args.extend([
-                infrastructure.name, "--path", infrastructure.notification_sock_path,
-            ])
+            args.extend([infrastructure.name, "--path", infrastructure.notification_sock_path])
         elif infrastructure.name in ["mqtt"]:
-            args.extend([
-                infrastructure.name, "--host", MQTT_HOST, "--port", str(MQTT_PORT),
-            ])
+            args.extend([infrastructure.name, "--host", MQTT_HOST, "--port", str(MQTT_PORT)])
 
         args.append(json.dumps(data))
 
@@ -298,6 +306,7 @@ def notify_cmd(infrastructure):
         process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = process.communicate()
         return process.returncode, stdout, stderr
+
     yield notify
 
 
@@ -305,19 +314,23 @@ def notify_cmd(infrastructure):
 def notify_api(extra_module_paths, infrastructure):
     if infrastructure.name == "ubus":
         from foris_controller.buses.ubus import UbusNotificationSender
+
         sender = UbusNotificationSender(infrastructure.notification_sock_path)
 
     elif infrastructure.name == "unix-socket":
         from foris_controller.buses.unix_socket import UnixSocketNotificationSender
+
         sender = UnixSocketNotificationSender(infrastructure.notification_sock_path)
 
     elif infrastructure.name == "mqtt":
         from foris_controller.buses.mqtt import MqttNotificationSender
+
         sender = MqttNotificationSender(MQTT_HOST, MQTT_PORT, None)
 
     def notify(module, action, notification=None, validate=True):
         from foris_controller.utils import get_validator_dirs
         from foris_schema import ForisValidator
+
         if validate:
             validator = ForisValidator(*get_validator_dirs([module], extra_module_paths))
         else:
@@ -385,11 +398,7 @@ def lighttpd_restart_command(cmdline_script_root):
 
 @pytest.fixture(scope="function")
 def device(request):
-    DEV_MAP = {
-        "mox": "CZ.NIC Turris Mox Board",
-        "omnia": "Turris Omnia",
-        "turris": "Turris 1.1",
-    }
+    DEV_MAP = {"mox": "CZ.NIC Turris Mox Board", "omnia": "Turris Omnia", "turris": "Turris 1.1"}
 
     device_str = DEV_MAP.get(request.param, "unknown")
     with FileFaker(FILE_ROOT_PATH, "/tmp/sysinfo/model", False, device_str + "\n"):

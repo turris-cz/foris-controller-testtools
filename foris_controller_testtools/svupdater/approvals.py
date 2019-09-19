@@ -49,10 +49,7 @@ def _resolve_approval(approval_hash, solution):
     :param solution: shall the approval be granted otherwise it will be denied ("granted"/"denied")
     :type solution: str
     """
-    action_map = {
-        "asked": ["granted", "denied"],
-        "denied": ["granted"],
-    }
+    action_map = {"asked": ["granted", "denied"], "denied": ["granted"]}
     # try to find approval
     try:
         with open(APPROVAL_FILE_PATH) as f:

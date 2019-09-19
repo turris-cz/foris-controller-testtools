@@ -25,21 +25,19 @@ An program which is placed in top of a message bus and translates requests to co
 """
 
 setup(
-    name='foris-controller-testtools',
+    name="foris-controller-testtools",
     version=__version__,
-    author='CZ.NIC, z.s.p.o. (http://www.nic.cz/)',
-    author_email='stepan.henek@nic.cz',
+    author="CZ.NIC, z.s.p.o. (http://www.nic.cz/)",
+    author_email="stepan.henek@nic.cz",
     packages=[
-        'foris_controller_testtools',
-        'foris_controller_testtools.svupdater',  # mocked updater module
+        "foris_controller_testtools",
+        "foris_controller_testtools.svupdater",  # mocked updater module
     ],
-    url='https://gitlab.labs.nic.cz/turris/foris-controller-testtools',
-    license='COPYING',
+    url="https://gitlab.labs.nic.cz/turris/foris-controller-testtools",
+    license="COPYING",
     description=DESCRIPTION,
-    long_description=open('README.rst').read(),
-    package_data={
-        'foris_controller_testtools': ['turrishw/*.tar.gz'],
-    },
+    long_description=open("README.rst").read(),
+    package_data={"foris_controller_testtools": ["turrishw/*.tar.gz"]},
     install_requires=[
         "pytest",
         "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller.git",

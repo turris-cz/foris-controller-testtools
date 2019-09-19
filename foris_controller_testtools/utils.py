@@ -39,8 +39,10 @@ TURRISHW_ROOT = "/tmp/turrishw_root/"
 
 def get_uci_module(lock_backend):
     from foris_controller.app import app_info
+
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends import uci
+
     return uci
 
 
@@ -87,8 +89,9 @@ def check_service_result(name, action, passed=None, clean=True, expected_found=T
     found = False
     for line in lines:
         obtained_passed, obtained_action = line.strip().split(" ")
-        if (expected_passed is None or obtained_passed == expected_passed)\
-                and action == obtained_action:
+        if (
+            expected_passed is None or obtained_passed == expected_passed
+        ) and action == obtained_action:
             found = True
 
     if clean:
@@ -162,6 +165,7 @@ def network_restart_was_called(args=[], cleanup=True):
     _delay_till_file_exists(NETWORK_RESTART_CALLED_FILE)
     return _command_was_called(NETWORK_RESTART_CALLED_FILE, args, cleanup)
 
+
 def lighttpd_restart_was_called(args=[], cleanup=True):
     """ Checks whether a lighttpd restart script was called
     :param args: arguments of the script
@@ -228,91 +232,61 @@ DEFAULT_USERLISTS = {
             " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
             " Applikationen) erlaubt.",
         },
-        "title": {
-            "en": "Access tokens",
-            "cs": "Přístupové tokeny",
-            "de": "Zugangsverwaltung",
-        },
+        "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
         "enabled": False,
         "hidden": False,
     },
     "automation": {
         "message": {
-            "cs": 'Software pro ovládání domácí automatizace, včetně Turris Gadgets.',
-            "de": 'Steuerungssoftware für die Hausautomation, einschließlich Turris '
-            'Gadgets.',
-            "en": 'Control software for home automation, including Turris Gadgets.',
-
+            "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
+            "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris " "Gadgets.",
+            "en": "Control software for home automation, including Turris Gadgets.",
         },
-        "title": {
-            "cs": 'Domácí automatizace',
-            "de": 'Hausautomation',
-            "en": 'Home automation',
-        },
+        "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
         "enabled": False,
         "hidden": False,
     },
     "dev-detect": {
         "message": {
-            'cs': 'Software pro detekci nově připojených zařízení na lokální síti'
-            ' (EXPERIMENTÁLNÍ).',
-            'de': 'Software für die Erkennung neuer Geräte im lokalen Netzwerk (EXPERIMENTELL).',
-            'en': 'Software for detecting new devices on local network (EXPERIMENTAL).',
-
+            "cs": "Software pro detekci nově připojených zařízení na lokální síti"
+            " (EXPERIMENTÁLNÍ).",
+            "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk (EXPERIMENTELL).",
+            "en": "Software for detecting new devices on local network (EXPERIMENTAL).",
         },
         "title": {
-            'cs': 'Detekce připojených zařízení',
-            'de': 'Geräterkennung',
-            'en': 'Device detection',
-
+            "cs": "Detekce připojených zařízení",
+            "de": "Geräterkennung",
+            "en": "Device detection",
         },
         "enabled": False,
         "hidden": False,
     },
     "dvb": {
         "message": {
-            'cs': 'Software na sdílení televizního vysílání přijímaného Turrisem.'
-            ' Neobsahuje ovladače pro zařízení.',
-            'de': 'Software für die Weiterleitung von Fernsehsignal, welcher mittels'
-            ' DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.',
-            'en': 'Software for sharing television received by a DVB tuner on Turris.'
-            ' Does not include device drivers.'
+            "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
+            " Neobsahuje ovladače pro zařízení.",
+            "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
+            " DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.",
+            "en": "Software for sharing television received by a DVB tuner on Turris."
+            " Does not include device drivers.",
         },
-        "title": {
-            'cs': 'Televizní tuner',
-            'de': 'DVB-Tuner',
-            'en': 'DVB tuner',
-
-        },
+        "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
         "enabled": False,
         "hidden": False,
     },
-    'i_agree_honeypot': {
+    "i_agree_honeypot": {
         "message": {
-            "cs": 'Past na roboty zkoušející hesla na SSH.',
-            "de": 'Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten versuchen.',
-            "en": 'Trap for password-guessing robots on SSH.',
-
+            "cs": "Past na roboty zkoušející hesla na SSH.",
+            "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten versuchen.",
+            "en": "Trap for password-guessing robots on SSH.",
         },
-        "title": {
-            "cs": 'SSH Honeypot',
-            "de": 'SSH-Honigtopf',
-            "en": 'SSH Honeypot',
-        },
+        "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
         "enabled": False,
         "hidden": False,
     },
-    'i_agree_datacollect': {
-        "message": {
-            "cs": "",
-            "de": "",
-            "en": "",
-        },
-        "title": {
-            "cs": "",
-            "de": "",
-            "en": "",
-        },
+    "i_agree_datacollect": {
+        "message": {"cs": "", "de": "", "en": ""},
+        "title": {"cs": "", "de": "", "en": ""},
         "enabled": False,
         "hidden": True,
     },

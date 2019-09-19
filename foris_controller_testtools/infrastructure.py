@@ -39,6 +39,7 @@ if sys.version_info < (3, 0):
     import SocketServer
 else:
     import socketserver
+
     SocketServer = socketserver
 
 
@@ -55,8 +56,10 @@ notifications_lock = Lock()
 
 def _wait_for_ubus_module(module, socket_path, timeout=2):
     import ubus
+
     wait_process = subprocess.Popen(
-        ["ubus", "-t", str(timeout), "wait_for", module, "-s", socket_path])
+        ["ubus", "-t", str(timeout), "wait_for", module, "-s", socket_path]
+    )
     wait_process.wait()
 
 
@@ -110,10 +113,17 @@ class ClientSocket(object):
 
 
 class Infrastructure(object):
-
     def __init__(
-        self, name, backend_name, modules, extra_module_paths, uci_config_dir,
-        cmdline_script_root, file_root, client_socket_path=None, debug_output=False,
+        self,
+        name,
+        backend_name,
+        modules,
+        extra_module_paths,
+        uci_config_dir,
+        cmdline_script_root,
+        file_root,
+        client_socket_path=None,
+        debug_output=False,
     ):
         self.client_socket_path = client_socket_path
         self.client_socket = ClientSocket(client_socket_path, name) if client_socket_path else None
@@ -147,35 +157,38 @@ class Infrastructure(object):
         new_env["TURRISHW_ROOT"] = TURRISHW_ROOT
         new_env["FC_UPDATER_MODULE"] = "foris_controller_testtools.svupdater"
 
-        kwargs = {'env': new_env}
+        kwargs = {"env": new_env}
         if not debug_output:
-            devnull = open(os.devnull, 'wb')
-            kwargs['stderr'] = devnull
-            kwargs['stdout'] = devnull
+            devnull = open(os.devnull, "wb")
+            kwargs["stderr"] = devnull
+            kwargs["stdout"] = devnull
 
-        self._exiting = Value('i', 0)
+        self._exiting = Value("i", 0)
         self._exiting.value = False
 
         if name == "unix-socket":
             self.listener = Process(target=unix_notification_listener, args=tuple())
             self.listener.start()
         elif name == "ubus":
-            self.listener = Process(target=ubus_notification_listener, args=(self._exiting, ))
+            self.listener = Process(target=ubus_notification_listener, args=(self._exiting,))
             self.listener.start()
         elif name == "mqtt":
             self.listener = Process(target=mqtt_notification_listener, args=(MQTT_HOST, MQTT_PORT))
             self.listener.start()
 
         modules = list(itertools.chain.from_iterable([("-m", e) for e in modules]))
-        extra_paths = list(itertools.chain.from_iterable(
-            [("--extra-module-path", e) for e in extra_module_paths]))
+        extra_paths = list(
+            itertools.chain.from_iterable([("--extra-module-path", e) for e in extra_module_paths])
+        )
 
         client_socket_option = ["-C", client_socket_path] if client_socket_path else []
-        args = [
-            "foris-controller",
-        ] + modules + extra_paths + client_socket_option + [
-            "-d", "-b", backend_name, name
-        ]
+        args = (
+            ["foris-controller"]
+            + modules
+            + extra_paths
+            + client_socket_option
+            + ["-d", "-b", backend_name, name]
+        )
 
         if name == "unix-socket":
             args.append("--path")
@@ -210,6 +223,7 @@ class Infrastructure(object):
                 pass
         try:
             import ubus  # disconnect from ubus if connected
+
             ubus.disconnect()
         except Exception:
             pass
@@ -217,7 +231,7 @@ class Infrastructure(object):
     @staticmethod
     def chunks(data, size):
         for i in range(0, len(data), size):
-            yield data[i:i + size]
+            yield data[i : i + size]
 
     def wait_mqtt_connected(self):
         if not self.connected:
@@ -262,6 +276,7 @@ class Infrastructure(object):
 
         elif self.name == "ubus":
             import ubus
+
             if not ubus.get_connected():
                 ubus.connect(self.sock_path)
             module = "foris-controller-%s" % data.get("module", "?")
@@ -272,43 +287,57 @@ class Infrastructure(object):
             request_id = str(uuid.uuid4())
             if len(dumped_data) > 512 * 1024:
                 for data_part in Infrastructure.chunks(dumped_data, 512 * 1024):
-                    ubus.call(module, function, {
-                        "payload": {"multipart_data": data_part},
-                        "final": False, "multipart": True, "request_id": request_id,
-                    })
+                    ubus.call(
+                        module,
+                        function,
+                        {
+                            "payload": {"multipart_data": data_part},
+                            "final": False,
+                            "multipart": True,
+                            "request_id": request_id,
+                        },
+                    )
 
-                res = ubus.call(module, function, {
-                    "payload": {"multipart_data": ""},
-                    "final": True, "multipart": True, "request_id": request_id,
-                })
+                res = ubus.call(
+                    module,
+                    function,
+                    {
+                        "payload": {"multipart_data": ""},
+                        "final": True,
+                        "multipart": True,
+                        "request_id": request_id,
+                    },
+                )
 
             else:
-                res = ubus.call(module, function, {
-                    "payload": {"data": inner_data} if inner_data is not None else {},
-                    "final": True, "multipart": False, "request_id": request_id,
-                })
+                res = ubus.call(
+                    module,
+                    function,
+                    {
+                        "payload": {"data": inner_data} if inner_data is not None else {},
+                        "final": True,
+                        "multipart": False,
+                        "request_id": request_id,
+                    },
+                )
 
             ubus.disconnect()
             resp = json.loads("".join([e["data"] for e in res]))
             if "errors" in resp:
                 return {
-                    u"module": data["module"],
-                    u"action": data["action"],
-                    u"kind": u"reply",
-                    u"errors": resp["errors"],
+                    "module": data["module"],
+                    "action": data["action"],
+                    "kind": "reply",
+                    "errors": resp["errors"],
                 }
             if "data" in resp:
                 return {
-                    u"module": data["module"],
-                    u"action": data["action"],
-                    u"kind": u"reply",
-                    u"data": resp["data"],
+                    "module": data["module"],
+                    "action": data["action"],
+                    "kind": "reply",
+                    "data": resp["data"],
                 }
-            return {
-                u"module": data["module"],
-                u"action": data["action"],
-                u"kind": u"reply",
-            }
+            return {"module": data["module"], "action": data["action"], "kind": "reply"}
 
         elif self.name == "mqtt":
             self.wait_mqtt_connected()
@@ -316,14 +345,14 @@ class Infrastructure(object):
             output = {}
             msg_id = uuid.uuid1()
 
-            reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id,)
+            reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id)
             publish_topic = "foris-controller/%s/request/%s/action/%s" % (
-                MQTT_ID, data["module"], data["action"],
+                MQTT_ID,
+                data["module"],
+                data["action"],
             )
 
-            msg = {
-                'reply_msg_id': str(msg_id),
-            }
+            msg = {"reply_msg_id": str(msg_id)}
             if "data" in data:
                 msg["data"] = data["data"]
 
@@ -352,6 +381,7 @@ class Infrastructure(object):
 
     def process_message_ubus_raw(self, data, request_id, final, multipart, multipart_data):
         import ubus
+
         if not ubus.get_connected():
             ubus.connect(self.sock_path)
         module = "foris-controller-%s" % data.get("module", "?")
@@ -362,43 +392,36 @@ class Infrastructure(object):
             payload["data"] = data
         if multipart_data is not None:
             payload["multipart_data"] = multipart_data
-        res = ubus.call(module, function, {
-            "payload": payload,
-            "final": final, "multipart": multipart, "request_id": request_id,
-        })
+        res = ubus.call(
+            module,
+            function,
+            {"payload": payload, "final": final, "multipart": multipart, "request_id": request_id},
+        )
         if not res:
             return None
         resp = json.loads("".join([e["data"] for e in res]))
         if "errors" in resp:
             return {
-                u"module": data["module"],
-                u"action": data["action"],
-                u"kind": u"reply",
-                u"errors": resp["errors"],
+                "module": data["module"],
+                "action": data["action"],
+                "kind": "reply",
+                "errors": resp["errors"],
             }
         if "data" in resp:
             return {
-                u"module": data["module"],
-                u"action": data["action"],
-                u"kind": u"reply",
-                u"data": resp["data"],
+                "module": data["module"],
+                "action": data["action"],
+                "kind": "reply",
+                "data": resp["data"],
             }
-        return {
-            u"module": data["module"],
-            u"action": data["action"],
-            u"kind": u"reply",
-        }
+        return {"module": data["module"], "action": data["action"], "kind": "reply"}
 
     def get_notifications(self, old_data=None, filters=[]):
-
         def filter_data(data):
             if data is None:
                 return None
             else:
-                return [
-                    e for e in data if not filters or
-                    (e["module"], e["action"]) in filters
-                ]
+                return [e for e in data if not filters or (e["module"], e["action"]) in filters]
 
         while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
             time.sleep(0.2)
@@ -418,8 +441,10 @@ class Infrastructure(object):
 def ubus_notification_listener(exiting):
     import prctl
     import signal
+
     prctl.set_pdeathsig(signal.SIGKILL)
     import ubus
+
     if ubus.get_connected():
         ubus.disconnect(False)
     ubus.connect(UBUS_PATH)
@@ -435,12 +460,8 @@ def ubus_notification_listener(exiting):
         f.flush()
 
         def handler(module, data):
-            module_name = module[len("foris-controller-"):]
-            msg = {
-                "module": module_name,
-                "kind": "notification",
-                "action": data["action"],
-            }
+            module_name = module[len("foris-controller-") :]
+            msg = {"module": module_name, "kind": "notification", "action": data["action"]}
             if "data" in data:
                 msg["data"] = data["data"]
 
@@ -458,6 +479,7 @@ def ubus_notification_listener(exiting):
 def mqtt_notification_listener(host, port):
     import prctl
     import signal
+
     prctl.set_pdeathsig(signal.SIGKILL)
     import ubus
 
@@ -474,9 +496,8 @@ def mqtt_notification_listener(host, port):
 
         def on_connect(client, userdata, flags, rc):
             client.subscribe(
-                "foris-controller/%s/notification/+/action/+" % os.environ.get(
-                    "TEST_CLIENT_ID", "+"
-                )
+                "foris-controller/%s/notification/+/action/+"
+                % os.environ.get("TEST_CLIENT_ID", "+")
             )
 
         def on_message(client, userdata, msg):
@@ -486,17 +507,14 @@ def mqtt_notification_listener(host, port):
                 return
 
             match = re.match(
-                r"^foris-controller/[^/]+/notification/([^/]+)/action/([^/]+)$", msg.topic)
+                r"^foris-controller/[^/]+/notification/([^/]+)/action/([^/]+)$", msg.topic
+            )
 
             if match:
                 module, action = match.group(1, 2)
-                msg = {
-                    "module": module,
-                    "action": action,
-                    "kind": "notification",
-                }
-                if 'data' in parsed:
-                    msg['data'] = parsed['data']
+                msg = {"module": module, "action": action, "kind": "notification"}
+                if "data" in parsed:
+                    msg["data"] = parsed["data"]
                 with notifications_lock:
                     f.write(json.dumps(msg) + "\n")
                     f.flush()
@@ -512,6 +530,7 @@ def unix_notification_listener():
     import prctl
     import signal
     from threading import Lock
+
     lock = Lock()
     prctl.set_pdeathsig(signal.SIGKILL)
     global notifications_lock

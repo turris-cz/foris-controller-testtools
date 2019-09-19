@@ -31,12 +31,9 @@ if __name__ == "__main__":
     sock = ClientSocket(CLIENT_SOCKET_PATH)
 
     def send_notication(data):
-        sock.notification({
-            "module": "updater",
-            "kind": "notification",
-            "action": "run",
-            "data": data,
-        })
+        sock.notification(
+            {"module": "updater", "kind": "notification", "action": "run", "data": data}
+        )
 
     try:
         # mock updater run
@@ -58,11 +55,9 @@ if __name__ == "__main__":
         with open(REBOOT_INDICATOR_PATH, "w") as f:
             f.flush()
         try:
-            sock.notification({
-                "module": "maintain",
-                "kind": "notification",
-                "action": "reboot_required",
-            })
+            sock.notification(
+                {"module": "maintain", "kind": "notification", "action": "reboot_required"}
+            )
         except socket.error:
             pass
 
