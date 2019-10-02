@@ -24,10 +24,14 @@ import json
 import os
 import shutil
 import stat
+import tarfile
+import multiprocessing
+import threading
+
 from .svupdater import lists as svupdater_lists
 from .svupdater import l10n as svupdater_l10n
 from .svupdater import approvals as svupdater_approvals
-import tarfile
+
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
@@ -39,6 +43,9 @@ TURRISHW_ROOT = "/tmp/turrishw_root/"
 
 def get_uci_module(lock_backend):
     from foris_controller.app import app_info
+
+    if isinstance(lock_backend, str):
+        lock_backend = multiprocessing if lock_backend == "ubus" else threading
 
     app_info["lock_backend"] = lock_backend
     from foris_controller_backends import uci
