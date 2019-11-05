@@ -230,7 +230,7 @@ def set_languages(langs=None):
 
 DEFAULT_USERLISTS = {
     "api-token": {
-        "message": {
+        "description": {
             "en": u"A Foris plugin allowing to manage remote API access tokens"
             " (for example for use in Spectator or Android application).",
             "cs": "Správa tokenů pro vzdálený API přístup"
@@ -244,7 +244,7 @@ DEFAULT_USERLISTS = {
         "hidden": False,
     },
     "automation": {
-        "message": {
+        "description": {
             "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
             "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris " "Gadgets.",
             "en": "Control software for home automation, including Turris Gadgets.",
@@ -254,7 +254,7 @@ DEFAULT_USERLISTS = {
         "hidden": False,
     },
     "dev-detect": {
-        "message": {
+        "description": {
             "cs": "Software pro detekci nově připojených zařízení na lokální síti"
             " (EXPERIMENTÁLNÍ).",
             "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk (EXPERIMENTELL).",
@@ -269,7 +269,7 @@ DEFAULT_USERLISTS = {
         "hidden": False,
     },
     "dvb": {
-        "message": {
+        "description": {
             "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
             " Neobsahuje ovladače pro zařízení.",
             "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
@@ -282,7 +282,7 @@ DEFAULT_USERLISTS = {
         "hidden": False,
     },
     "i_agree_honeypot": {
-        "message": {
+        "description": {
             "cs": "Past na roboty zkoušející hesla na SSH.",
             "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten versuchen.",
             "en": "Trap for password-guessing robots on SSH.",
@@ -290,9 +290,20 @@ DEFAULT_USERLISTS = {
         "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
         "enabled": False,
         "hidden": False,
+        "options": {
+            "minipot": {
+                "title": "Minipots",
+                "description": "Minimal honeypots to catch attackers for various protocols.",
+                "default": True,
+            },
+            "haas": {
+                "title": "SSH Honeypot",
+                "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz)."
+            }
+        }
     },
     "i_agree_datacollect": {
-        "message": {"cs": "", "de": "", "en": ""},
+        "description": {"cs": "", "de": "", "en": ""},
         "title": {"cs": "", "de": "", "en": ""},
         "enabled": False,
         "hidden": True,

@@ -18,35 +18,51 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
+import copy
 import json
+import typing
+from .. import utils
 
 LISTS_FILE_PATH = "/tmp/updater-mock-lists.json"
+__PKGLIST_ENTRIES = typing.Dict[
+    str, typing.Union[
+        str, bool, typing.Dict[str, typing.Union[str, bool]]
+    ]
+]
 
 
-def pkglists(lang):
+def pkglists(lang) -> typing.Dict[str, __PKGLIST_ENTRIES]:
     with open(LISTS_FILE_PATH) as f:
-        data = json.load(f)
+        stored = json.load(f)
 
     res = {}
-    for name, stored in data.items():
+    for name, lst in stored.items():
         res[name] = {
-            "title": stored["title"].get(lang, stored["title"]["en"]),
-            "message": stored["message"].get(lang, stored["message"]["en"]),
-            "enabled": stored["enabled"],
-            "hidden": stored["hidden"],
+            "title": lst["title"].get(lang, lst["title"]["en"]),
+            "description": lst["description"].get(lang, lst["description"]["en"]),
+            "enabled": lst["enabled"],
+            "hidden": lst["hidden"],
+            "options": {}
         }
+        for opt_name, option in lst.get("options", {}).items():
+            res[name]["options"][opt_name] = {
+                "enabled": option.get("enabled", option.get("default", False)),
+                "title": option["title"],
+                "description": option["description"],
+            }
 
     return res
 
 
-def update_pkglists(lists):
-    with open(LISTS_FILE_PATH) as f:
-        data = json.load(f)
-    for name in data.keys():
-        data[name]["enabled"] = name in lists
+def update_pkglists(lists: typing.Dict[str, typing.Dict[str, bool]]):
+    res = copy.deepcopy(utils.DEFAULT_USERLISTS)
+    for name, options in lists.items():
+        res[name]["enabled"] = True
+        for opt_name, enabled in options.items():
+            res[name]["options"][opt_name]["enabled"] = enabled
 
     with open(LISTS_FILE_PATH, "w") as f:
-        json.dump(data, f)
+        json.dump(res, f)
         f.flush()
 
     return True
