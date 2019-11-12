@@ -33,18 +33,18 @@ setup(
         "foris_controller_testtools",
         "foris_controller_testtools.svupdater",  # mocked updater module
     ],
-    url="https://gitlab.labs.nic.cz/turris/foris-controller-testtools",
+    url="https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller-testtools",
     license="COPYING",
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
     package_data={"foris_controller_testtools": ["turrishw/*.tar.gz"]},
     install_requires=[
         "pytest",
-        "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller.git",
+        "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller.git",
         "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
     ],
     dependency_links=[
-        "git+https://gitlab.labs.nic.cz/turris/foris-controller.git#egg=foris-controller",
+        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller.git#egg=foris-controller",
         "git+https://gitlab.labs.nic.cz/turris/turrishw.git#egg=turrishw",
     ],
     zip_safe=False,
