@@ -252,7 +252,12 @@ class Infrastructure(object):
             client = mqtt.Client()
             client.on_connect = on_connect
             client.on_message = on_message
-            client.connect(MQTT_HOST, MQTT_PORT, 30)
+            while True:
+                try:
+                    client.connect(MQTT_HOST, MQTT_PORT, 30)
+                    break
+                except ConnectionError:
+                    time.sleep(0.1)  # Socket may not be created yet
             client.loop_start()
             client._thread.join(10)
             client.disconnect()
