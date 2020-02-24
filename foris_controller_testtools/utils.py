@@ -307,6 +307,17 @@ DEFAULT_USERLISTS = {
         "title": {"cs": "", "de": "", "en": ""},
         "enabled": False,
         "hidden": True,
+        "options": {
+            "survey": {
+                "title": "Usage Survey",
+                "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
+            },
+            "dynfw": {
+                "title": "Dynamic Firewall",
+                "description": "Add firewall rules to block attackers detected by Turris collection network.",
+                "default": True,
+            }
+        },
     },
 }
 
