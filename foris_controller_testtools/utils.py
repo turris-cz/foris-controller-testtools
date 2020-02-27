@@ -242,6 +242,7 @@ DEFAULT_USERLISTS = {
         "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
         "enabled": False,
         "hidden": False,
+        "official": True,
     },
     "automation": {
         "description": {
@@ -280,6 +281,7 @@ DEFAULT_USERLISTS = {
         "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
         "enabled": False,
         "hidden": False,
+        "url": "https://doc.turris.cz/doc/en/howto/dvb",
     },
     "i_agree_honeypot": {
         "description": {
@@ -290,6 +292,7 @@ DEFAULT_USERLISTS = {
         "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
         "enabled": False,
         "hidden": False,
+        "official": True,
         "options": {
             "minipot": {
                 "title": "Minipots",
@@ -307,6 +310,7 @@ DEFAULT_USERLISTS = {
         "title": {"cs": "", "de": "", "en": ""},
         "enabled": False,
         "hidden": True,
+        "official": True,
         "options": {
             "survey": {
                 "title": "Usage Survey",
