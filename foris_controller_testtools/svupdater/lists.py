@@ -43,7 +43,7 @@ def pkglists(lang) -> typing.Dict[str, __PKGLIST_ENTRIES]:
             "enabled": lst["enabled"],
             "hidden": lst["hidden"],
             "official": lst.get("official", False),
-            "url": lst.get("url", ""),
+            "url": lst.get("url"),
             "options": {},
         }
         for opt_name, option in lst.get("options", {}).items():
