@@ -1,3 +1,17 @@
+0.6 (2020-04-15)
+----------------
+
+* use it as pytest plugin
+* register markers
+* reflect svupdater updates
+* sleep when mqtt socket is not available
+* update repository urls
+* add env_overrides fixture
+* reformat code using black
+* lighttpd restart command
+* add delay to reboot_was_called and network_restart_was_called
+* mqtt fixes and updates
+
 0.5 (2018-12-21)
 ----------------
 
