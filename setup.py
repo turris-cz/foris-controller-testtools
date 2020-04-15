@@ -18,6 +18,7 @@
 #
 
 from setuptools import setup
+
 from foris_controller_testtools import __version__
 
 DESCRIPTION = """
@@ -37,6 +38,9 @@ setup(
     license="COPYING",
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
+    entry_points={
+        "pytest11": ["foris_controller_testtools = foris_controller_testtools.pytest_plugin"]
+    },
     package_data={"foris_controller_testtools": ["turrishw/*.tar.gz"]},
     install_requires=[
         "pytest",
