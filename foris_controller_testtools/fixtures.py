@@ -26,7 +26,15 @@ import shutil
 import subprocess
 import textwrap
 
-from .infrastructure import Infrastructure, SOCK_PATH, UBUS_PATH, MQTT_HOST, MQTT_PORT
+from .infrastructure import (
+    MqttInfrastructure,
+    UbusInfrastructure,
+    UnixSocketInfrastructure,
+    SOCK_PATH,
+    UBUS_PATH,
+    MQTT_HOST,
+    MQTT_PORT,
+)
 from .utils import (
     INIT_SCRIPT_TEST_DIR,
     set_userlists,
@@ -172,8 +180,16 @@ def infrastructure(
     cmdline_script_root,
     env_overrides,
 ):
-    instance = Infrastructure(
-        message_bus,
+    if message_bus == "mqtt":
+        infrastructure_class = MqttInfrastructure
+    elif message_bus == "ubus":
+        infrastructure_class = UbusInfrastructure
+    elif message_bus == "unix-socket":
+        infrastructure_class = UnixSocketInfrastructure
+    else:
+        raise ValueError(f"Unknown message bus {message_bus}")
+
+    instance = infrastructure_class(
         backend,
         controller_modules,
         extra_module_paths,

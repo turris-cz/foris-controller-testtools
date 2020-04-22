@@ -18,6 +18,7 @@
 #
 
 
+import abc
 import itertools
 import json
 import os
@@ -28,6 +29,7 @@ import re
 import subprocess
 import struct
 import uuid
+import typing
 
 
 from paho.mqtt import client as mqtt
@@ -70,8 +72,7 @@ class ClientSocket(object):
         self.message_bus = message_bus
 
     def connect(self):
-        while not os.path.exists(self.socket_path):
-            time.sleep(0.3)
+        Infrastructure.wait_for_file(self.socket_path)
 
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.connect(self.socket_path)
@@ -112,22 +113,13 @@ class ClientSocket(object):
         self.socket.sendall(length_bytes + data)
 
 
-class Infrastructure(object):
-    def __init__(
-        self,
-        name,
-        backend_name,
-        modules,
-        extra_module_paths,
-        uci_config_dir,
-        cmdline_script_root,
-        file_root,
-        client_socket_path=None,
-        debug_output=False,
-        env_overrides={},
-    ):
+class Infrastructure(metaclass=abc.ABCMeta):
+    def init_socket_client(self, client_socket_path):
         self.client_socket_path = client_socket_path
-        self.client_socket = ClientSocket(client_socket_path, name) if client_socket_path else None
+        self.client_socket = (
+            ClientSocket(client_socket_path, self.name) if client_socket_path else None
+        )
+
         try:
             os.unlink(SOCK_PATH)
         except Exception:
@@ -138,19 +130,9 @@ class Infrastructure(object):
             except Exception:
                 pass
 
-        self.name = name
-        self.backend_name = backend_name
-        if name not in ["unix-socket", "ubus", "mqtt"]:
-            raise NotImplementedError()
-        if backend_name not in ["openwrt", "mock"]:
-            raise NotImplementedError()
-
-        self.sock_path = SOCK_PATH
-        if name == "ubus":
-            self.sock_path = UBUS_PATH
-            while not os.path.exists(self.sock_path):
-                time.sleep(0.3)
-
+    def get_environment(
+        self, env_overrides: dict, uci_config_dir: str, cmdline_script_root: str, file_root: str
+    ) -> dict:
         new_env = dict(os.environ)
         new_env["DEFAULT_UCI_CONFIG_DIR"] = uci_config_dir
         new_env["FORIS_CMDLINE_ROOT"] = cmdline_script_root
@@ -160,24 +142,50 @@ class Infrastructure(object):
 
         new_env.update(env_overrides)
 
-        kwargs = {"env": new_env}
+        return new_env
+
+    @staticmethod
+    def wait_for_file(path):
+        while not os.path.exists(path):
+            time.sleep(0.3)
+
+    @abc.abstractmethod
+    def make_listener(self):
+        pass
+
+    @abc.abstractmethod
+    def bus_options(self) -> typing.List[str]:
+        pass
+
+    def __init__(
+        self,
+        backend_name,
+        modules,
+        extra_module_paths,
+        uci_config_dir,
+        cmdline_script_root,
+        file_root,
+        client_socket_path=None,
+        debug_output=False,
+        env_overrides={},
+    ):
+        self.init_socket_client(client_socket_path)
+
+        self.backend_name = backend_name
+        if backend_name not in ["openwrt", "mock"]:
+            raise NotImplementedError()
+
+        kwargs = {
+            "env": self.get_environment(
+                env_overrides, uci_config_dir, cmdline_script_root, file_root
+            )
+        }
         if not debug_output:
             devnull = open(os.devnull, "wb")
             kwargs["stderr"] = devnull
             kwargs["stdout"] = devnull
 
-        self._exiting = Value("i", 0)
-        self._exiting.value = False
-
-        if name == "unix-socket":
-            self.listener = Process(target=unix_notification_listener, args=tuple())
-            self.listener.start()
-        elif name == "ubus":
-            self.listener = Process(target=ubus_notification_listener, args=(self._exiting,))
-            self.listener.start()
-        elif name == "mqtt":
-            self.listener = Process(target=mqtt_notification_listener, args=(MQTT_HOST, MQTT_PORT))
-            self.listener.start()
+        self.make_listener()
 
         modules = list(itertools.chain.from_iterable([("-m", e) for e in modules]))
         extra_paths = list(
@@ -190,32 +198,15 @@ class Infrastructure(object):
             + modules
             + extra_paths
             + client_socket_option
-            + ["-d", "-b", backend_name, name]
+            + ["-d", "-b", backend_name, self.name]
         )
 
-        if name == "unix-socket":
-            args.append("--path")
-            args.append(self.sock_path)
-            args.append("--notifications-path")
-            args.append(NOTIFICATION_SOCK_PATH)
-            self.notification_sock_path = NOTIFICATION_SOCK_PATH
-        elif name == "ubus":
-            args.append("--path")
-            args.append(self.sock_path)
-            self.notification_sock_path = self.sock_path
-        elif name == "mqtt":
-            args.append("--host")
-            args.append(MQTT_HOST)
-            args.append("--port")
-            args.append(str(MQTT_PORT))
-            self.notification_host = MQTT_HOST
-            self.notification_port = MQTT_PORT
+        args.extend(self.bus_options())
 
         self.server = subprocess.Popen(args, **kwargs)
         self.connected = False
 
     def exit(self):
-        self._exiting.value = True
         self.server.kill()
         self.listener.terminate()
         self.client_socket.close()
@@ -224,17 +215,57 @@ class Infrastructure(object):
                 os.unlink(path)
             except OSError:
                 pass
-        try:
-            import ubus  # disconnect from ubus if connected
-
-            ubus.disconnect()
-        except Exception:
-            pass
 
     @staticmethod
     def chunks(data, size):
         for i in range(0, len(data), size):
             yield data[i : i + size]
+
+    @abc.abstractmethod
+    def process_message(self, data):
+        pass
+
+    def get_notifications(self, old_data=None, filters=[]):
+        def filter_data(data):
+            if data is None:
+                return None
+            else:
+                return [e for e in data if not filters or (e["module"], e["action"]) in filters]
+
+        while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
+            time.sleep(0.2)
+
+        global notifications_lock
+
+        while True:
+            with notifications_lock, open(NOTIFICATIONS_OUTPUT_PATH) as f:
+                data = f.readlines()
+                last_data = [json.loads(e.strip()) for e in data]
+                filtered_data = filter_data(last_data)
+                if not filter_data(old_data) == filtered_data:
+                    break
+        return filtered_data
+
+
+class MqttInfrastructure(Infrastructure):
+    name = "mqtt"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notification_host = MQTT_HOST
+        self.notification_port = MQTT_PORT
+
+    def bus_options(self) -> typing.List[str]:
+        return [
+            "--host",
+            MQTT_HOST,
+            "--port",
+            str(MQTT_PORT),
+        ]
+
+    def make_listener(self):
+        self.listener = Process(target=mqtt_notification_listener, args=(MQTT_HOST, MQTT_PORT))
+        self.listener.start()
 
     def wait_mqtt_connected(self):
         if not self.connected:
@@ -264,136 +295,145 @@ class Infrastructure(object):
             self.connected = True
 
     def process_message(self, data):
-        if self.name == "unix-socket":
-            while not os.path.exists(self.sock_path):
-                time.sleep(1)
-            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            sock.connect(self.sock_path)
-            data = json.dumps(data).encode("utf8")
-            length_bytes = struct.pack("I", len(data))
-            sock.sendall(length_bytes + data)
+        self.wait_mqtt_connected()
 
-            length = struct.unpack("I", sock.recv(4))[0]
-            received = sock.recv(length)
-            recv_len = len(received)
-            while recv_len < length:
-                received += sock.recv(length)
-                recv_len = len(received)
+        output = {}
+        msg_id = uuid.uuid1()
 
-            return json.loads(received.decode("utf8"))
+        reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id)
+        publish_topic = "foris-controller/%s/request/%s/action/%s" % (
+            MQTT_ID,
+            data["module"],
+            data["action"],
+        )
 
-        elif self.name == "ubus":
-            import ubus
+        msg = {"reply_msg_id": str(msg_id)}
+        if "data" in data:
+            msg["data"] = data["data"]
 
-            if not ubus.get_connected():
-                ubus.connect(self.sock_path)
-            module = "foris-controller-%s" % data.get("module", "?")
-            _wait_for_ubus_module(module, self.sock_path)
-            function = data.get("action", "?")
-            inner_data = data.get("data", None)
-            dumped_data = json.dumps(inner_data)
-            request_id = str(uuid.uuid4())
-            if len(dumped_data) > 512 * 1024:
-                for data_part in Infrastructure.chunks(dumped_data, 512 * 1024):
-                    ubus.call(
-                        module,
-                        function,
-                        {
-                            "payload": {"multipart_data": data_part},
-                            "final": False,
-                            "multipart": True,
-                            "request_id": request_id,
-                        },
-                    )
+        def on_message(client, userdata, msg):
+            output.update(json.loads(msg.payload))
+            client.disconnect()
+            client.loop_stop(True)
 
-                res = ubus.call(
+        def on_connect(client, userdata, flags, rc):
+            client.subscribe(reply_topic)
+
+        def on_subscribe(client, userdata, mid, granted_qos):
+            client.publish(publish_topic, json.dumps(msg))
+
+        client = mqtt.Client()
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.on_subscribe = on_subscribe
+        client.connect(MQTT_HOST, MQTT_PORT, 30)
+        client.loop_start()
+        client._thread.join(30)
+        return output
+
+
+class UbusInfrastructure(Infrastructure):
+
+    name = "ubus"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notification_sock_path = UBUS_PATH
+
+    def bus_options(self) -> typing.List[str]:
+        return [
+            "--path",
+            UBUS_PATH,
+        ]
+
+    def make_listener(self):
+        self._exiting = Value("i", 0)
+        self._exiting.value = False
+        self.listener = Process(target=ubus_notification_listener, args=(self._exiting,))
+        self.listener.start()
+
+    def exit(self):
+        self._exiting.value = True
+        super().exit()
+        try:
+            import ubus  # disconnect from ubus if connected
+
+            ubus.disconnect()
+        except Exception:
+            pass
+
+    def process_message(self, data):
+        import ubus
+
+        if not ubus.get_connected():
+            ubus.connect(UBUS_PATH)
+        module = "foris-controller-%s" % data.get("module", "?")
+        _wait_for_ubus_module(module, UBUS_PATH)
+        function = data.get("action", "?")
+        inner_data = data.get("data", None)
+        dumped_data = json.dumps(inner_data)
+        request_id = str(uuid.uuid4())
+        if len(dumped_data) > 512 * 1024:
+            for data_part in Infrastructure.chunks(dumped_data, 512 * 1024):
+                ubus.call(
                     module,
                     function,
                     {
-                        "payload": {"multipart_data": ""},
-                        "final": True,
+                        "payload": {"multipart_data": data_part},
+                        "final": False,
                         "multipart": True,
                         "request_id": request_id,
                     },
                 )
 
-            else:
-                res = ubus.call(
-                    module,
-                    function,
-                    {
-                        "payload": {"data": inner_data} if inner_data is not None else {},
-                        "final": True,
-                        "multipart": False,
-                        "request_id": request_id,
-                    },
-                )
-
-            ubus.disconnect()
-            resp = json.loads("".join([e["data"] for e in res]))
-            if "errors" in resp:
-                return {
-                    "module": data["module"],
-                    "action": data["action"],
-                    "kind": "reply",
-                    "errors": resp["errors"],
-                }
-            if "data" in resp:
-                return {
-                    "module": data["module"],
-                    "action": data["action"],
-                    "kind": "reply",
-                    "data": resp["data"],
-                }
-            return {"module": data["module"], "action": data["action"], "kind": "reply"}
-
-        elif self.name == "mqtt":
-            self.wait_mqtt_connected()
-
-            output = {}
-            msg_id = uuid.uuid1()
-
-            reply_topic = "foris-controller/%s/reply/%s" % (MQTT_ID, msg_id)
-            publish_topic = "foris-controller/%s/request/%s/action/%s" % (
-                MQTT_ID,
-                data["module"],
-                data["action"],
+            res = ubus.call(
+                module,
+                function,
+                {
+                    "payload": {"multipart_data": ""},
+                    "final": True,
+                    "multipart": True,
+                    "request_id": request_id,
+                },
             )
 
-            msg = {"reply_msg_id": str(msg_id)}
-            if "data" in data:
-                msg["data"] = data["data"]
-
-            def on_message(client, userdata, msg):
-                output.update(json.loads(msg.payload))
-                client.disconnect()
-                client.loop_stop(True)
-
-            def on_connect(client, userdata, flags, rc):
-                client.subscribe(reply_topic)
-
-            def on_subscribe(client, userdata, mid, granted_qos):
-                client.publish(publish_topic, json.dumps(msg))
-
-            client = mqtt.Client()
-            client.on_connect = on_connect
-            client.on_message = on_message
-            client.on_subscribe = on_subscribe
-            client.connect(MQTT_HOST, MQTT_PORT, 30)
-            client.loop_start()
-            client._thread.join(30)
-            return output
-
         else:
-            raise NotImplementedError()
+            res = ubus.call(
+                module,
+                function,
+                {
+                    "payload": {"data": inner_data} if inner_data is not None else {},
+                    "final": True,
+                    "multipart": False,
+                    "request_id": request_id,
+                },
+            )
+
+        ubus.disconnect()
+        resp = json.loads("".join([e["data"] for e in res]))
+        if "errors" in resp:
+            return {
+                "module": data["module"],
+                "action": data["action"],
+                "kind": "reply",
+                "errors": resp["errors"],
+            }
+        if "data" in resp:
+            return {
+                "module": data["module"],
+                "action": data["action"],
+                "kind": "reply",
+                "data": resp["data"],
+            }
+        return {"module": data["module"], "action": data["action"], "kind": "reply"}
 
     def process_message_ubus_raw(self, data, request_id, final, multipart, multipart_data):
         import ubus
 
         if not ubus.get_connected():
-            ubus.connect(self.sock_path)
+            ubus.connect(UBUS_PATH)
         module = "foris-controller-%s" % data.get("module", "?")
-        _wait_for_ubus_module(data.get("module", "?"), self.sock_path)
+        _wait_for_ubus_module(data.get("module", "?"), UBUS_PATH)
         function = data.get("action", "?")
         payload = {}
         if data is not None:
@@ -424,26 +464,42 @@ class Infrastructure(object):
             }
         return {"module": data["module"], "action": data["action"], "kind": "reply"}
 
-    def get_notifications(self, old_data=None, filters=[]):
-        def filter_data(data):
-            if data is None:
-                return None
-            else:
-                return [e for e in data if not filters or (e["module"], e["action"]) in filters]
 
-        while not os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
-            time.sleep(0.2)
+class UnixSocketInfrastructure(Infrastructure):
+    name = "unix-socket"
 
-        global notifications_lock
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.notification_sock_path = NOTIFICATION_SOCK_PATH
 
-        while True:
-            with notifications_lock, open(NOTIFICATIONS_OUTPUT_PATH) as f:
-                data = f.readlines()
-                last_data = [json.loads(e.strip()) for e in data]
-                filtered_data = filter_data(last_data)
-                if not filter_data(old_data) == filtered_data:
-                    break
-        return filtered_data
+    def bus_options(self) -> typing.List[str]:
+        return [
+            "--path",
+            SOCK_PATH,
+            "--notifications-path",
+            NOTIFICATION_SOCK_PATH,
+        ]
+
+    def make_listener(self):
+        self.listener = Process(target=unix_notification_listener, args=tuple())
+        self.listener.start()
+
+    def process_message(self, data):
+        self.wait_for_file(SOCK_PATH)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(SOCK_PATH)
+        data = json.dumps(data).encode("utf8")
+        length_bytes = struct.pack("I", len(data))
+        sock.sendall(length_bytes + data)
+
+        length = struct.unpack("I", sock.recv(4))[0]
+        received = sock.recv(length)
+        recv_len = len(received)
+        while recv_len < length:
+            received += sock.recv(length)
+            recv_len = len(received)
+
+        return json.loads(received.decode("utf8"))
 
 
 def ubus_notification_listener(exiting):
