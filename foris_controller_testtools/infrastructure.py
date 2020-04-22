@@ -169,6 +169,9 @@ class Infrastructure(metaclass=abc.ABCMeta):
         debug_output=False,
         env_overrides={},
     ):
+        self.debug_output = debug_output
+
+        self.start_message_bus()
         self.init_socket_client(client_socket_path)
 
         self.backend_name = backend_name
@@ -215,6 +218,7 @@ class Infrastructure(metaclass=abc.ABCMeta):
                 os.unlink(path)
             except OSError:
                 pass
+        self.terminate_message_bus()
 
     @staticmethod
     def chunks(data, size):
@@ -245,6 +249,14 @@ class Infrastructure(metaclass=abc.ABCMeta):
                 if not filter_data(old_data) == filtered_data:
                     break
         return filtered_data
+
+    @abc.abstractmethod
+    def start_message_bus(self):
+        pass
+
+    @abc.abstractmethod
+    def terminate_message_bus(self):
+        pass
 
 
 class MqttInfrastructure(Infrastructure):
@@ -330,6 +342,20 @@ class MqttInfrastructure(Infrastructure):
         client.loop_start()
         client._thread.join(30)
         return output
+
+    def start_message_bus(self):
+        kwargs = {}
+        if not self.debug_output:
+            devnull = open(os.devnull, "wb")
+            kwargs["stderr"] = devnull
+            kwargs["stdout"] = devnull
+        mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
+        self.mosquitto_instance = subprocess.Popen(
+            [mosquitto_path, "-v", "-p", str(MQTT_PORT)], **kwargs
+        )
+
+    def terminate_message_bus(self):
+        self.mosquitto_instance.kill()
 
 
 class UbusInfrastructure(Infrastructure):
@@ -464,6 +490,16 @@ class UbusInfrastructure(Infrastructure):
             }
         return {"module": data["module"], "action": data["action"], "kind": "reply"}
 
+    def start_message_bus(self):
+        self.ubusd_instance = subprocess.Popen(["ubusd", "-s", UBUS_PATH])
+
+    def terminate_message_bus(self):
+        self.ubusd_instance.kill()
+        try:
+            os.unlink(SOCK_PATH)
+        except Exception:
+            pass
+
 
 class UnixSocketInfrastructure(Infrastructure):
     name = "unix-socket"
@@ -500,6 +536,12 @@ class UnixSocketInfrastructure(Infrastructure):
             recv_len = len(received)
 
         return json.loads(received.decode("utf8"))
+
+    def start_message_bus(self):
+        pass  # unix-socket doesn't use any message bus
+
+    def terminate_message_bus(self):
+        pass  # unix-socket doesn't use any message bus
 
 
 def ubus_notification_listener(exiting):

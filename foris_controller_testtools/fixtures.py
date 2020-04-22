@@ -25,6 +25,7 @@ import pytest
 import shutil
 import subprocess
 import textwrap
+import warnings
 
 from .infrastructure import (
     MqttInfrastructure,
@@ -82,33 +83,32 @@ def init_script_result():
 
 @pytest.fixture(scope="session")
 def ubusd_test():
-    ubusd_instance = subprocess.Popen(["ubusd", "-s", UBUS_PATH])
-    yield ubusd_instance
-    ubusd_instance.kill()
-    try:
-        os.unlink(SOCK_PATH)
-    except Exception:
-        pass
+    warnings.warn(
+        "Fixture 'ubusd_test' is deprecated. "
+        "Infrastructure should handle starting and stopping ubusd. "
+        "Note that this fixture will be removed in the future",
+        DeprecationWarning,
+    )
 
 
 @pytest.fixture(scope="session")
 def mosquitto_test(request):
-
-    kwargs = {}
-    if not request.config.getoption("--debug-output"):
-        devnull = open(os.devnull, "wb")
-        kwargs["stderr"] = devnull
-        kwargs["stdout"] = devnull
-
-    mosquitto_path = os.environ.get("MOSQUITTO_PATH", "/usr/sbin/mosquitto")
-    mosquitto_instance = subprocess.Popen([mosquitto_path, "-v", "-p", str(MQTT_PORT)], **kwargs)
-    yield mosquitto_instance
-    mosquitto_instance.kill()
+    warnings.warn(
+        "Fixture 'mosquitto_test' is deprecated. "
+        "Infrastructure should handle starting and stopping mosquitto. "
+        "Note that this fixture will be removed in the future",
+        DeprecationWarning,
+    )
 
 
 @pytest.fixture(scope="session")
 def start_buses(ubusd_test, mosquitto_test):
-    yield ubusd_test, mosquitto_test
+    warnings.warn(
+        "Fixture 'start_buses' is deprecated. "
+        "Infrastructure should handle starting and stopping buses. "
+        "Note that this fixture will be removed in the future",
+        DeprecationWarning,
+    )
 
 
 @pytest.fixture(scope="module")
