@@ -2,7 +2,7 @@
 
 #
 # foris-controller-testtools
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018, 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -228,111 +228,152 @@ def set_languages(langs=None):
         f.flush()
 
 
-DEFAULT_USERLISTS = {
-    "api-token": {
-        "description": {
-            "en": u"A Foris plugin allowing to manage remote API access tokens"
-            " (for example for use in Spectator or Android application).",
-            "cs": "Správa tokenů pro vzdálený API přístup"
-            " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",
-            "de": "Ein Plugin für Foris, welcher Management von Tokens für das"
-            " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
-            " Applikationen) erlaubt.",
-        },
-        "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
-        "enabled": False,
-        "hidden": False,
-        "official": True,
-    },
-    "automation": {
-        "description": {
-            "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
-            "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris " "Gadgets.",
-            "en": "Control software for home automation, including Turris Gadgets.",
-        },
-        "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
-        "enabled": False,
-        "hidden": False,
-    },
-    "dev-detect": {
-        "description": {
-            "cs": "Software pro detekci nově připojených zařízení na lokální síti"
-            " (EXPERIMENTÁLNÍ).",
-            "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk (EXPERIMENTELL).",
-            "en": "Software for detecting new devices on local network (EXPERIMENTAL).",
-        },
-        "title": {
-            "cs": "Detekce připojených zařízení",
-            "de": "Geräterkennung",
-            "en": "Device detection",
-        },
-        "enabled": False,
-        "hidden": False,
-    },
-    "dvb": {
-        "description": {
-            "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
-            " Neobsahuje ovladače pro zařízení.",
-            "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
-            " DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.",
-            "en": "Software for sharing television received by a DVB tuner on Turris."
-            " Does not include device drivers.",
-        },
-        "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
-        "enabled": False,
-        "hidden": False,
-        "url": "https://doc.turris.cz/doc/en/howto/dvb",
-    },
-    "i_agree_honeypot": {
-        "description": {
-            "cs": "Past na roboty zkoušející hesla na SSH.",
-            "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten versuchen.",
-            "en": "Trap for password-guessing robots on SSH.",
-        },
-        "title": {"cs": "SSH Honeypot", "de": "SSH-Honigtopf", "en": "SSH Honeypot"},
-        "enabled": False,
-        "hidden": False,
-        "official": True,
-        "options": {
-            "minipot": {
-                "title": "Minipots",
-                "description": "Minimal honeypots to catch attackers for various protocols.",
-                "default": True,
+DEFAULT_PACKAGE_LISTS = {
+        "api-token": {
+            "description": {
+                "en": u"A Foris plugin allowing to manage remote API access tokens"
+                " (for example for use in Spectator or Android application).",
+                "cs": "Správa tokenů pro vzdálený API přístup"
+                " (např. pro Spectator, nebo Android aplikaci) ve Forisu.",
+                "de": "Ein Plugin für Foris, welcher Management von Tokens für das"
+                " Fernzugriff-API (z. B. für Anwendung in Spectator oder Android"
+                " Applikationen) erlaubt.",
             },
-            "haas": {
-                "title": "SSH Honeypot",
-                "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz)."
-            }
+            "title": {"en": "Access tokens", "cs": "Přístupové tokeny", "de": "Zugangsverwaltung"},
+            "enabled": False,
+        },
+        "automation": {
+            "description": {
+                "cs": "Software pro ovládání domácí automatizace, včetně Turris Gadgets.",
+                "de": "Steuerungssoftware für die Hausautomation, einschließlich Turris "
+                "Gadgets.",
+                "en": "Control software for home automation, including Turris Gadgets.",
+            },
+            "title": {"cs": "Domácí automatizace", "de": "Hausautomation", "en": "Home automation"},
+            "enabled": False,
+            "labels": ["community"],
+        },
+        "dev-detect": {
+            "description": {
+                "cs": "Software pro detekci nově připojených zařízení na lokální síti"
+                " (EXPERIMENTÁLNÍ).",
+                "de": "Software für die Erkennung neuer Geräte im lokalen Netzwerk"
+                " (EXPERIMENTELL).",
+                "en": "Software for detecting new devices on local network (EXPERIMENTAL).",
+            },
+            "title": {
+                "cs": "Detekce připojených zařízení",
+                "de": "Geräterkennung",
+                "en": "Device detection",
+            },
+            "enabled": False,
+            "labels": ["experimental"],
+        },
+        "dvb": {
+            "description": {
+                "cs": "Software na sdílení televizního vysílání přijímaného Turrisem."
+                " Neobsahuje ovladače pro zařízení.",
+                "de": "Software für die Weiterleitung von Fernsehsignal, welcher mittels"
+                " DVB-Tuner vom Turris empfangen wird. Gerätetreiber sind nicht enthalten.",
+                "en": "Software for sharing television received by a DVB tuner on Turris."
+                " Does not include device drivers.",
+            },
+            "title": {"cs": "Televizní tuner", "de": "DVB-Tuner", "en": "DVB tuner"},
+            "enabled": False,
+            "url": "https://doc.turris.cz/doc/en/howto/dvb",
+            "labels": ["community", "advanced"],
+        },
+        "i_agree_honeypot": {
+            "description": {
+                "cs": "Past na roboty zkoušející hesla na SSH.",
+                "de": "Falle für Roboter, die das Kennwort für den SSH-Zugriff zu erraten"
+                " versuchen.",
+                "en": "Trap for password-guessing robots on SSH.",
+            },
+            "title": {"cs": "Honeypot", "de": "Honigtopf", "en": "Honeypot"},
+            "enabled": False,
+            "options": {
+                "minipot": {
+                    "title": "Minipots",
+                    "description": "Minimal honeypots to catch attackers for various protocols.",
+                    "default": True,
+                },
+                "haas": {
+                    "title": "SSH Honeypot",
+                    "description": "SSH honeypot using Honeypot as a Service (haas.nic.cz).",
+                }
+            },
+            "labels": ["experimental"],
+        },
+        "i_agree_datacollect": {
+            "description": {"cs": "", "de": "", "en": ""},
+            "title": {"cs": "datacollect", "de": "datacollect", "en": "datacollect"},
+            "enabled": False,
+            "options": {
+                "survey": {
+                    "title": "Usage Survey",
+                    "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
+                },
+                "dynfw": {
+                    "title": "Dynamic Firewall",
+                    "description": "Add firewall rules to block attackers detected by Turris collection network.",
+                    "default": True,
+                }
+            },
+        },
+    }
+
+OPTION_LABELS = {
+        "advanced": {
+            "title": "Advanced users",
+            "description": "This functionality is usable only for advanced users.",
+            "severity": "secondary"
+        },
+        "community": {
+            "title": "Community",
+            "description": "This package list is not officially supported. Turris team has no responsibility for stability of software that is part of this list.",
+            "severity": "success"
+        },
+        "experimental": {
+            "title": "Experimental",
+            "description": "Software that is part of this package list is considered experimental. Problems when using it can be expected.",
+            "severity": "danger"
+        },
+        "deprecated": {
+            "title": "Deprecated",
+            "description": "This package list and/or software that provides are planned to be removed. It is advised to not use it.",
+            "severity": "warning"
+        },
+        "storage": {
+            "title": "External storage",
+            "description": "External storage use is highly suggested for use of this package list",
+            "severity": "primary"
+        },
+        "high_memory": {
+            "title": "High memory usage",
+            "description": "Software in this package list consumes possibly higher amount of memory to run. It is not suggested to use it with small memory.",
+            "severity": "info"
+        },
+        "high_storage": {
+            "title": "High storage usage",
+            "description": "Software in this package list consumes possibly higher amount of storage space to install. It is not suggested to use it with small storages such as internal storage of Turris 1.x and SD cards with less than 1GB of storage.",
+            "severity": "info"
+        },
+        "netload": {
+            "title": "Network load",
+            "description": "This functionality can decreases network performance. That can be felt only on faster uplinks but because of that it still can be decremental to some users.",
+            "severity": "secondary"
         }
-    },
-    "i_agree_datacollect": {
-        "description": {"cs": "", "de": "", "en": ""},
-        "title": {"cs": "", "de": "", "en": ""},
-        "enabled": False,
-        "hidden": True,
-        "official": True,
-        "options": {
-            "survey": {
-                "title": "Usage Survey",
-                "description": "Collect data about router usage (installed packages, Internet connection type and etc.).",
-            },
-            "dynfw": {
-                "title": "Dynamic Firewall",
-                "description": "Add firewall rules to block attackers detected by Turris collection network.",
-                "default": True,
-            }
-        },
-    },
-}
+    }
 
 
-def set_userlists(lists=None):
-    """ Sets mocked userlists
+def set_package_lists(lists=None):
+    """ Sets mocked package lists
     :param lists: {"nas": {...}, "api-token": {...}, ...}
     :type lists: dict
     """
     if not lists:
-        lists = DEFAULT_USERLISTS
+        lists = DEFAULT_PACKAGE_LISTS
 
     with open(svupdater_lists.LISTS_FILE_PATH, "w") as f:
         json.dump(lists, f)
