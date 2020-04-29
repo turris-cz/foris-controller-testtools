@@ -72,7 +72,7 @@ class ClientSocket(object):
         self.message_bus = message_bus
 
     def connect(self):
-        Infrastructure.wait_for_file(self.socket_path)
+        wait_for_file(self.socket_path)
 
         self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         self.socket.connect(self.socket_path)
@@ -87,6 +87,7 @@ class ClientSocket(object):
             self.connect()
 
         if self.message_bus == "ubus":
+            wait_for_file(UBUS_PATH)
             _wait_for_ubus_module("foris-controller-%s" % msg.get("module", "?"), UBUS_PATH)
 
         self.socket.settimeout(timeout)
@@ -143,11 +144,6 @@ class Infrastructure(metaclass=abc.ABCMeta):
         new_env.update(env_overrides)
 
         return new_env
-
-    @staticmethod
-    def wait_for_file(path):
-        while not os.path.exists(path):
-            time.sleep(0.3)
 
     @abc.abstractmethod
     def make_listener(self):
@@ -295,12 +291,7 @@ class MqttInfrastructure(Infrastructure):
             client = mqtt.Client()
             client.on_connect = on_connect
             client.on_message = on_message
-            while True:
-                try:
-                    client.connect(MQTT_HOST, MQTT_PORT, 30)
-                    break
-                except ConnectionError:
-                    time.sleep(0.1)  # Socket may not be created yet
+            wait_mqtt_client_connected(client, MQTT_HOST, MQTT_PORT)
             client.loop_start()
             client._thread.join(10)
             client.disconnect()
@@ -338,7 +329,7 @@ class MqttInfrastructure(Infrastructure):
         client.on_connect = on_connect
         client.on_message = on_message
         client.on_subscribe = on_subscribe
-        client.connect(MQTT_HOST, MQTT_PORT, 30)
+        wait_mqtt_client_connected(client, MQTT_HOST, MQTT_PORT)
         client.loop_start()
         client._thread.join(30)
         return output
@@ -392,7 +383,9 @@ class UbusInfrastructure(Infrastructure):
         import ubus
 
         if not ubus.get_connected():
+            wait_for_file(UBUS_PATH)
             ubus.connect(UBUS_PATH)
+
         module = "foris-controller-%s" % data.get("module", "?")
         _wait_for_ubus_module(module, UBUS_PATH)
         function = data.get("action", "?")
@@ -521,7 +514,7 @@ class UnixSocketInfrastructure(Infrastructure):
         self.listener.start()
 
     def process_message(self, data):
-        self.wait_for_file(SOCK_PATH)
+        wait_for_file(SOCK_PATH)
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         sock.connect(SOCK_PATH)
         data = json.dumps(data).encode("utf8")
@@ -553,6 +546,8 @@ def ubus_notification_listener(exiting):
 
     if ubus.get_connected():
         ubus.disconnect(False)
+
+    wait_for_file(UBUS_PATH)
     ubus.connect(UBUS_PATH)
     global notifications_lock
 
@@ -580,6 +575,27 @@ def ubus_notification_listener(exiting):
             ubus.loop(200)
             if exiting.value:
                 break
+
+
+def wait_for_file(path, max_time=10.0):
+    start_time = time.monotonic()
+    while not os.path.exists(path):
+        time.sleep(0.1)
+        if time.monotonic() > start_time + max_time:
+            raise ConnectionError(path)
+
+
+def wait_mqtt_client_connected(client: mqtt.Client, host: str, port: int, max_time=10.0):
+    start_time = time.monotonic()
+
+    while True:
+        try:
+            client.connect(host, port)
+            break
+        except ConnectionError:
+            if time.monotonic() > max_time + start_time:
+                raise
+            time.sleep(0.1)  # Socket may not be created yet
 
 
 def mqtt_notification_listener(host, port):
@@ -628,7 +644,7 @@ def mqtt_notification_listener(host, port):
         client = mqtt.Client()
         client.on_connect = on_connect
         client.on_message = on_message
-        client.connect(host, port)
+        wait_mqtt_client_connected(client, host, port)
         client.loop_forever()
 
 
