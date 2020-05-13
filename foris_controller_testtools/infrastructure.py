@@ -492,6 +492,10 @@ class UbusInfrastructure(Infrastructure):
             os.unlink(SOCK_PATH)
         except Exception:
             pass
+        try:
+            os.unlink(UBUS_PATH)
+        except Exception:
+            pass
 
 
 class UnixSocketInfrastructure(Infrastructure):
