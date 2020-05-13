@@ -1,3 +1,9 @@
+0.7 (2020-05-13)
+----------------
+* deprecation of start_buses, ubusd_test, mosquitto_test fixture
+* infrastructure refactored
+* infrastructure handlers starting and stopping of message buses
+
 0.6 (2020-04-15)
 ----------------
 
