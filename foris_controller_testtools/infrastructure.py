@@ -1,6 +1,6 @@
 #
 # foris-controller-testtools
-# Copyright (C) 2019 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import uuid
 from paho.mqtt import client as mqtt
 from multiprocessing import Process, Value, Lock
 
+from .exceptions import BackendNotImplementedError
 from .utils import TURRISHW_ROOT
 
 if sys.version_info < (3, 0):
@@ -172,7 +173,7 @@ class Infrastructure(metaclass=abc.ABCMeta):
 
         self.backend_name = backend_name
         if backend_name not in ["openwrt", "mock"]:
-            raise NotImplementedError()
+            raise BackendNotImplementedError("Unsupported backend '{}'".format(backend_name))
 
         kwargs = {
             "env": self.get_environment(
