@@ -151,13 +151,6 @@ def controller_modules():
 
 
 @pytest.fixture(scope="module")
-def extra_module_paths():
-    """ List of extra modules paths, (--extra-modules-paths) argument
-    """
-    return []  # by default return an empty list test should override this fixture
-
-
-@pytest.fixture(scope="module")
 def env_overrides():
     """ List of env variables to be used with foris-controller (running within Infrastructure)
     """
@@ -177,7 +170,6 @@ def infrastructure(
     backend,
     message_bus,
     controller_modules,
-    extra_module_paths,
     cmdline_script_root,
     env_overrides,
 ):
@@ -193,7 +185,6 @@ def infrastructure(
     instance = infrastructure_class(
         backend,
         controller_modules,
-        extra_module_paths,
         UCI_CONFIG_DIR_PATH,
         cmdline_script_root,
         FILE_ROOT_PATH,
@@ -351,7 +342,7 @@ def notify_cmd(infrastructure):
 
 
 @pytest.fixture(scope="module")
-def notify_api(extra_module_paths, infrastructure):
+def notify_api(infrastructure):
     if infrastructure.name == "ubus":
         from foris_controller.buses.ubus import UbusNotificationSender
 
@@ -372,7 +363,7 @@ def notify_api(extra_module_paths, infrastructure):
         from foris_schema import ForisValidator
 
         if validate:
-            validator = ForisValidator(*get_validator_dirs([module], extra_module_paths))
+            validator = ForisValidator(*get_validator_dirs([module]))
         else:
             validator = None
         sender.notify(module, action, notification, validator)

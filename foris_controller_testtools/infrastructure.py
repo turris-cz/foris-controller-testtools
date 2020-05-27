@@ -163,7 +163,6 @@ class Infrastructure(metaclass=abc.ABCMeta):
         self,
         backend_name,
         modules,
-        extra_module_paths,
         uci_config_dir,
         cmdline_script_root,
         file_root,
@@ -193,15 +192,11 @@ class Infrastructure(metaclass=abc.ABCMeta):
         self.make_listener()
 
         modules = list(itertools.chain.from_iterable([("-m", e) for e in modules]))
-        extra_paths = list(
-            itertools.chain.from_iterable([("--extra-module-path", e) for e in extra_module_paths])
-        )
 
         client_socket_option = ["-C", client_socket_path] if client_socket_path else []
         args = (
             ["foris-controller"]
             + modules
-            + extra_paths
             + client_socket_option
             + ["-d", "-b", backend_name, self.name]
         )
