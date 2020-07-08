@@ -22,14 +22,14 @@ import abc
 import itertools
 import json
 import os
-import socket
-import sys
-import time
 import re
 import subprocess
+import socket
 import struct
-import uuid
+import sys
+import time
 import typing
+import uuid
 
 
 from paho.mqtt import client as mqtt
@@ -264,18 +264,14 @@ class MqttInfrastructure(Infrastructure):
         self.notification_port = MQTT_PORT
 
     def bus_options(self) -> typing.List[str]:
-        return [
-            "--host",
-            MQTT_HOST,
-            "--port",
-            str(MQTT_PORT),
-        ]
+        return ["--host", MQTT_HOST, "--port", str(MQTT_PORT)]
 
     def make_listener(self):
         self.listener = Process(target=mqtt_notification_listener, args=(MQTT_HOST, MQTT_PORT))
         self.listener.start()
 
     def wait_mqtt_connected(self):
+        """ wait till foris-controller connects to mqtt """
         if not self.connected:
 
             def on_connect(client, userdata, flags, rc):
@@ -345,6 +341,10 @@ class MqttInfrastructure(Infrastructure):
             [mosquitto_path, "-v", "-p", str(MQTT_PORT)], **kwargs
         )
 
+        # wait for mqtt port to be opened
+        client = mqtt.Client()
+        wait_mqtt_client_connected(client, MQTT_HOST, MQTT_PORT, timeout=30)
+
     def terminate_message_bus(self):
         self.mosquitto_instance.kill()
 
@@ -358,10 +358,7 @@ class UbusInfrastructure(Infrastructure):
         self.notification_sock_path = UBUS_PATH
 
     def bus_options(self) -> typing.List[str]:
-        return [
-            "--path",
-            UBUS_PATH,
-        ]
+        return ["--path", UBUS_PATH]
 
     def make_listener(self):
         self._exiting = Value("i", 0)
@@ -485,6 +482,7 @@ class UbusInfrastructure(Infrastructure):
 
     def start_message_bus(self):
         self.ubusd_instance = subprocess.Popen(["ubusd", "-s", UBUS_PATH])
+        wait_for_file(UBUS_PATH)
 
     def terminate_message_bus(self):
         self.ubusd_instance.kill()
@@ -506,12 +504,7 @@ class UnixSocketInfrastructure(Infrastructure):
         self.notification_sock_path = NOTIFICATION_SOCK_PATH
 
     def bus_options(self) -> typing.List[str]:
-        return [
-            "--path",
-            SOCK_PATH,
-            "--notifications-path",
-            NOTIFICATION_SOCK_PATH,
-        ]
+        return ["--path", SOCK_PATH, "--notifications-path", NOTIFICATION_SOCK_PATH]
 
     def make_listener(self):
         self.listener = Process(target=unix_notification_listener, args=tuple())
@@ -581,15 +574,15 @@ def ubus_notification_listener(exiting):
                 break
 
 
-def wait_for_file(path, max_time=10.0):
+def wait_for_file(path, timeout=10.0):
     start_time = time.monotonic()
     while not os.path.exists(path):
         time.sleep(0.1)
-        if time.monotonic() > start_time + max_time:
+        if time.monotonic() > start_time + timeout:
             raise ConnectionError(path)
 
 
-def wait_mqtt_client_connected(client: mqtt.Client, host: str, port: int, max_time=10.0):
+def wait_mqtt_client_connected(client: mqtt.Client, host: str, port: int, timeout=10.0):
     start_time = time.monotonic()
 
     while True:
@@ -597,7 +590,7 @@ def wait_mqtt_client_connected(client: mqtt.Client, host: str, port: int, max_ti
             client.connect(host, port)
             break
         except ConnectionError:
-            if time.monotonic() > max_time + start_time:
+            if time.monotonic() > timeout + start_time:
                 raise
             time.sleep(0.1)  # Socket may not be created yet
 
