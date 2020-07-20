@@ -35,6 +35,7 @@ from .svupdater import approvals as svupdater_approvals
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
+GENERIC_CALLED_FILE = "/tmp/command_called"
 REBOOT_CALLED_FILE = "/tmp/reboot_called"
 NETWORK_RESTART_CALLED_FILE = "/tmp/network_restart_called"
 LIGHTTPD_RESTART_CALLED_FILE = "/tmp/lighttpd_restart_called"
@@ -135,6 +136,17 @@ def _delay_till_file_exists(path, step=0.1, count=10):
         if os.path.exists(path):
             break
         time.sleep(step)
+
+
+def command_was_called(args=[], cleanup=True):
+    """ Checks whether a generic command or binary was called
+    :param args: arguments of the script
+    :param args: iterable
+    :param cleanup: remove GENERIC_CALLED_FILE after check
+    :param cleanup: bool
+    :returns: True if script was called
+    """
+    return _command_was_called(GENERIC_CALLED_FILE, args, cleanup)
 
 
 def sh_was_called(args=[], cleanup=True):
