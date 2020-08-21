@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,12 +29,12 @@ setup(
     name="foris-controller-testtools",
     version=__version__,
     author="CZ.NIC, z.s.p.o. (http://www.nic.cz/)",
-    author_email="stepan.henek@nic.cz",
+    author_email="packaging@turris.cz",
     packages=[
         "foris_controller_testtools",
         "foris_controller_testtools.svupdater",  # mocked updater module
     ],
-    url="https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller-testtools",
+    url="https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools",
     license="COPYING",
     description=DESCRIPTION,
     long_description=open("README.rst").read(),
@@ -44,12 +44,12 @@ setup(
     package_data={"foris_controller_testtools": ["turrishw/*.tar.gz"]},
     install_requires=[
         "pytest",
-        "foris-controller @ git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller.git",
-        "turrishw @ git+https://gitlab.labs.nic.cz/turris/turrishw.git",
+        "foris-controller @ git+https://gitlab.nic.cz/turris/foris-controller/foris-controller.git",
+        "turrishw @ git+https://gitlab.nic.cz/turris/turrishw.git",
     ],
     dependency_links=[
-        "git+https://gitlab.labs.nic.cz/turris/foris-controller/foris-controller.git#egg=foris-controller",
-        "git+https://gitlab.labs.nic.cz/turris/turrishw.git#egg=turrishw",
+        "git+https://gitlab.nic.cz/turris/foris-controller/foris-controller.git#egg=foris-controller",
+        "git+https://gitlab.nic.cz/turris/turrishw.git#egg=turrishw",
     ],
     zip_safe=False,
 )
