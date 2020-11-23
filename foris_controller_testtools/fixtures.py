@@ -36,6 +36,8 @@ from .infrastructure import (
     MQTT_HOST,
     MQTT_PORT,
 )
+
+from . import utils
 from .utils import (
     INIT_SCRIPT_TEST_DIR,
     set_package_lists,
@@ -45,6 +47,7 @@ from .utils import (
     REBOOT_CALLED_FILE,
     NETWORK_RESTART_CALLED_FILE,
     LIGHTTPD_RESTART_CALLED_FILE,
+    TURRISHW_ROOT,
 )
 
 
@@ -267,6 +270,15 @@ def file_root_init(request, file_root):
     yield FILE_ROOT_PATH, dir_path
 
     shutil.rmtree(FILE_ROOT_PATH, ignore_errors=True)
+
+
+@pytest.fixture(scope="function")
+def prepare_turrishw():
+    def prepare(name):
+        utils.prepare_turrishw(name)
+
+    yield prepare
+    shutil.rmtree(TURRISHW_ROOT, ignore_errors=True)
 
 
 @pytest.fixture(scope="function")
