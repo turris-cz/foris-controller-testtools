@@ -31,8 +31,6 @@ from .infrastructure import (
     MqttInfrastructure,
     UbusInfrastructure,
     UnixSocketInfrastructure,
-    SOCK_PATH,
-    UBUS_PATH,
     MQTT_HOST,
     MQTT_PORT,
 )
