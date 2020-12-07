@@ -449,3 +449,24 @@ def device(request):
 def turris_os_version(request):
     with FileFaker(FILE_ROOT_PATH, "/etc/turris-version", False, "%s\n" % request.param):
         yield request.param
+
+
+@pytest.fixture(scope="function")
+def cmdline_file(request):
+    """ Create /proc/cmdline file for different turris HW """
+    CMDLINE_MAP = {
+        "mox": ("earlyprintk console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 "
+                "mangled_fs=btrfs root=PARTUUID=00000000-01 rootflags=commit=5,subvol=@ "
+                "rootwait rw cfg80211.freg="),
+        "omnia": ("earlyprintk rootwait console=ttyS0,115200 rootfstype=btrfs "
+                  "root=PARTUUID=8f0b72a3-01 rootflags=commit=5,subvol=@ rw cfg80211.freg=**"),
+        "shield": ("earlyprintk console=ttyMV0,115200 earlycon=ar3700_uart,0xd0012000 "
+                   "mangled_fs=btrfs root=PARTUUID=00000000-01 rootflags=commit=5,subvol=@ "
+                   "rootwait turris_lists=contracts/shield rw cfg80211.freg="),
+        "turris": ("root=/dev/mmcblk0p2 rootwait rw rootfstype=btrfs rootflags=subvol=@,commit=5 "
+                   "console=ttyS0,115200"),
+    }
+
+    cmdline_str = CMDLINE_MAP.get(request.param)
+    with FileFaker(FILE_ROOT_PATH, "/proc/cmdline", False, f"{cmdline_str}\n"):
+        yield request.param
