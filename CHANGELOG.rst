@@ -1,5 +1,16 @@
+0.8.0 (2021-04-08)
+------------------
+
+* svupdater package list updates and fixes
+* cmdline_file fixture added
+* prepare_turrishw fixture added
+* fix wait for file / port to be opened before foris-controller is started
+* utils: run generic command
+* better error message for incorrect backend
+
 0.7 (2020-05-13)
 ----------------
+
 * deprecation of start_buses, ubusd_test, mosquitto_test fixture
 * infrastructure refactored
 * infrastructure handlers starting and stopping of message buses
