@@ -2,7 +2,7 @@
 
 #
 # foris-controller-testtools
-# Copyright (C) 2018, 2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018, 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -696,8 +696,10 @@ def prepare_turrishw_root(device, version):
     elif device == "turris":
         if version.split(".", 1)[0] == "3":
             prepare_turrishw("turris-3.X")
-        else:
+        elif version.split(".", 1)[0] == "4":
             prepare_turrishw("turris-4.0")
+        else:
+            prepare_turrishw("turris-5.2")
     elif device == "mox":
         prepare_turrishw("mox+EEC")
 
