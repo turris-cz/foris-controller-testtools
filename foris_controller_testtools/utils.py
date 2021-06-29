@@ -270,7 +270,7 @@ DEFAULT_PACKAGE_LISTS = {
                 "description": "Add firewall rules to block attackers detected by Turris collection network.",
                 "default": True
             },
-            "nikola": {
+            "fwlogs": {
                 "title": "Firewall Logs",
                 "description": "Collect logs from firewall for attempted connections.",
                 "default": True
