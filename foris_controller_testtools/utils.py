@@ -19,19 +19,20 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 #
 
-import time
 import json
+import multiprocessing
 import os
+import re
 import shutil
 import stat
 import tarfile
-import multiprocessing
 import threading
+import time
+import typing
 
-from .svupdater import lists as svupdater_lists
-from .svupdater import l10n as svupdater_l10n
 from .svupdater import approvals as svupdater_approvals
-
+from .svupdater import l10n as svupdater_l10n
+from .svupdater import lists as svupdater_lists
 
 INIT_SCRIPT_TEST_DIR = "/tmp/test_init"
 SH_CALLED_FILE = "/tmp/sh_called"
@@ -685,6 +686,21 @@ class FileFaker(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
+
+
+def read_and_parse_file(path: str, regex: str, groups: typing.Tuple[int] = (1,)):
+    """ Reads and parses a content of the file by regex,
+        returns None when the output doesn't match regex.
+        In case of match it returns string when one subgroup is requested,
+        tuple when multiple subgroups are requested.
+    """
+    with open(path) as f:
+        content = f.read()
+
+    match = re.search(regex, content, re.MULTILINE)
+    if not match:
+        return None
+    return match.group(*groups)
 
 
 def prepare_turrishw_root(device, version):
