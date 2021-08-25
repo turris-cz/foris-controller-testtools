@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2021-08-25
+### Fixed
+- waiting mqtt bus failed in some CI setups
+
 ## [0.10.0] - 2021-07-20
 ### Added
 - add `read_and_parse_file` function (reads and parses a content of the file by regex)
