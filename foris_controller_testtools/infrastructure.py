@@ -590,7 +590,7 @@ def wait_mqtt_client_connected(client: mqtt.Client, host: str, port: int, timeou
         try:
             client.connect(host, port)
             break
-        except ConnectionError:
+        except (ConnectionError, OSError):
             if time.monotonic() > timeout + start_time:
                 raise
             time.sleep(0.1)  # Socket may not be created yet
