@@ -3,3 +3,6 @@ class ForisControllerTesttoolsError(Exception):
 
 class BackendNotImplementedError(ForisControllerTesttoolsError):
     pass
+
+class MockNotFoundError(ForisControllerTesttoolsError):
+    pass

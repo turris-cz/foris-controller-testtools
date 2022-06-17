@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - add mock for TOS 6.0 on Turris 1.x routers
 
+### Changed
+- utils: Refactor `prepare_turrishw_root` function for better HW mocks lookup.
+
 ## [0.10.1] - 2021-08-25
 ### Fixed
 - waiting mqtt bus failed in some CI setups

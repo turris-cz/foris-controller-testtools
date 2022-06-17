@@ -2,7 +2,7 @@
 
 #
 # foris-controller-testtools
-# Copyright (C) 2018, 2020-2021 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018, 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,6 +30,7 @@ import threading
 import time
 import typing
 
+from .exceptions import MockNotFoundError
 from .svupdater import approvals as svupdater_approvals
 from .svupdater import l10n as svupdater_l10n
 from .svupdater import lists as svupdater_lists
@@ -703,24 +704,30 @@ def read_and_parse_file(path: str, regex: str, groups: typing.Tuple[int] = (1,))
     return match.group(*groups)
 
 
-def prepare_turrishw_root(device, version):
-    if device == "omnia":
-        if version.split(".", 1)[0] == "3":
-            prepare_turrishw("omnia-3.X")
-        else:
-            prepare_turrishw("omnia-4.0")
-    elif device == "turris":
-        if version.split(".", 1)[0] == "3":
-            prepare_turrishw("turris-3.X")
-        elif version.split(".", 1)[0] == "4":
-            prepare_turrishw("turris-4.0")
-        else:
-            prepare_turrishw("turris-5.2")
-    elif device == "mox":
-        prepare_turrishw("mox+EEC")
+def prepare_turrishw_root(device: str, version: str):
+    DEFAULT_VERSIONS = {  # if the requested version is not found, use these defaults
+        "omnia": "omnia-4.0",
+        "turris": "turris-6.0",
+        "mox": "mox+EEC"
+    }
+
+    DEVICE_MATRIX = {
+        ("omnia", "3"): "omnia-3.X",
+        ("turris", "3"): "turris-3.X",
+        ("turris", "4"): "turris-4.0",
+        ("turris", "5"): "turris-5.2",
+        ("turris", "6"): "turris-6.0",
+    }
+
+    major_ver = version.split(".", 1)[0]
+    mock_file = DEVICE_MATRIX.get((device, major_ver), DEFAULT_VERSIONS.get(device))
+    if not mock_file:
+        raise MockNotFoundError(f"Cannot find HW mock for device: '{device}'")
+
+    prepare_turrishw(mock_file)
 
 
-def prepare_turrishw(root):
+def prepare_turrishw(root: str):
     try:
         shutil.rmtree(TURRISHW_ROOT, ignore_errors=True)
     except Exception:
