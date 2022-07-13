@@ -1,6 +1,6 @@
 #
 # foris-controller-testtools
-# Copyright (C) 2018 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018, 2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,10 +20,26 @@
 
 import os
 import json
+import typing
 
 from .exceptions import ExceptionUpdaterApproveInvalid
 
 APPROVAL_FILE_PATH = "/tmp/updater-approval-mock.json"
+
+# Note: Keep these datatypes in sync with `svupdater.approvals`
+class PlannedPackage(typing.TypedDict):
+    name: str
+    op: str
+    cur_ver: typing.Optional[str]
+    new_ver: typing.Optional[str]
+
+
+class ApprovalRequest(typing.TypedDict):
+    hash: str
+    status: str
+    time: int
+    plan: typing.List[PlannedPackage]
+    reboot: typing.Optional[typing.Union[typing.Literal["delayed"], typing.Literal["finished"]]]
 
 
 def current():
