@@ -2,7 +2,7 @@
 
 #
 # foris-controller-testtools
-# Copyright (C) 2018, 2020-2022 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018, 2020-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -706,7 +706,7 @@ def read_and_parse_file(path: str, regex: str, groups: typing.Tuple[int] = (1,))
 
 def prepare_turrishw_root(device: str, version: str):
     DEFAULT_VERSIONS = {  # if the requested version is not found, use these defaults
-        "omnia": "omnia-4.0",
+        "omnia": "omnia-7.0",
         "turris": "turris-7.0",
         "mox": "mox+EEC-7.0"
     }
@@ -714,6 +714,8 @@ def prepare_turrishw_root(device: str, version: str):
     DEVICE_MATRIX = {
         ("mox", "7"): "mox+EEC-7.0",
         ("omnia", "3"): "omnia-3.X",
+        ("omnia", "4"): "omnia-4.0",  # compatible mapping for older tests
+        ("omnia", "7"): "omnia-7.0",
         ("turris", "3"): "turris-3.X",
         ("turris", "4"): "turris-4.0",
         ("turris", "5"): "turris-5.2",
