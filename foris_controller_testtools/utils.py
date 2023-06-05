@@ -712,6 +712,8 @@ def prepare_turrishw_root(device: str, version: str):
     }
 
     DEVICE_MATRIX = {
+        ("mox", "4"): "mox+EEC",  # compatible mapping for older tests
+        ("mox", "6"): "mox+EEC",  # compatible mapping for older tests
         ("mox", "7"): "mox+EEC-7.0",
         ("omnia", "3"): "omnia-3.X",
         ("omnia", "4"): "omnia-4.0",  # compatible mapping for older tests
