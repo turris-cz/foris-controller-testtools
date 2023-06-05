@@ -708,10 +708,11 @@ def prepare_turrishw_root(device: str, version: str):
     DEFAULT_VERSIONS = {  # if the requested version is not found, use these defaults
         "omnia": "omnia-4.0",
         "turris": "turris-6.0",
-        "mox": "mox+EEC"
+        "mox": "mox+EEC-7.0"
     }
 
     DEVICE_MATRIX = {
+        ("mox", "7"): "mox+EEC-7.0",
         ("omnia", "3"): "omnia-3.X",
         ("turris", "3"): "turris-3.X",
         ("turris", "4"): "turris-4.0",
