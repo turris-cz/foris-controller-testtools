@@ -707,7 +707,7 @@ def read_and_parse_file(path: str, regex: str, groups: typing.Tuple[int] = (1,))
 def prepare_turrishw_root(device: str, version: str):
     DEFAULT_VERSIONS = {  # if the requested version is not found, use these defaults
         "omnia": "omnia-4.0",
-        "turris": "turris-6.0",
+        "turris": "turris-7.0",
         "mox": "mox+EEC-7.0"
     }
 
@@ -718,6 +718,7 @@ def prepare_turrishw_root(device: str, version: str):
         ("turris", "4"): "turris-4.0",
         ("turris", "5"): "turris-5.2",
         ("turris", "6"): "turris-6.0",
+        ("turris", "7"): "turris-7.0",
     }
 
     major_ver = version.split(".", 1)[0]
