@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2023-10-02
+### Added
+- Add mock for Turris 1.1 with QMI modems on TOS 7.0
+- Add mock for Mox ABC with QMI modems on TOS 7.0
+- Backport mock for Omnia with VLANs on Turris OS 6.0
+
+### Changed
+- Update default mock for Mox AEEC on TOS 7.0
+- Update default mock for Turris 1.x on TOS 7.0
+- Update default mock for Omnia on TOS 7.0
+
 ## [0.14.1] - 2023-08-03
 ### Added
 - setup.py: aviod using git dependencies of foris-controller
