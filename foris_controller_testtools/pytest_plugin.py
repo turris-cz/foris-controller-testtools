@@ -1,5 +1,7 @@
 import pytest  # noqa
 
+from .fixtures import *  # noqa
+
 
 def pytest_configure(config):
     config.addinivalue_line(
