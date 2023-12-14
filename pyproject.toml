@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "foris-controller-testtools"
+dynamic = ["version"]
+description = "An program which is placed in top of a message bus and translates requests to commands for backends."
+readme = "README.rst"
+license = { file = "COPYING" }
+authors = [
+    { name = "CZ.NIC, z.s.p.o. (http://www.nic.cz/)", email = "packaging@turris.cz" },
+]
+dependencies = [
+    "foris-controller",
+    "pytest",
+]
+
+[project.entry-points.pytest11]
+foris_controller_testtools = "foris_controller_testtools.pytest_plugin"
+
+[project.urls]
+Homepage = "https://gitlab.nic.cz/turris/foris-controller/foris-controller-testtools"
+
+[tool.hatch.version]
+path = "foris_controller_testtools/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/foris_controller_testtools",
+]
