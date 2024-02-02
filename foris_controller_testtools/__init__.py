@@ -1,6 +1,6 @@
 #
 # foris-controller-testtools
-# Copyright (C) 2021-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2021-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,4 +18,4 @@
 #
 
 
-__version__ = "0.16.0"
+__version__ = "1.0.0"
