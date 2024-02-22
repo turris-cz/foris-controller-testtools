@@ -1,6 +1,6 @@
 #
 # foris-controller-testtools
-# Copyright (C) 2019-2020 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2019-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,12 +38,7 @@ from multiprocessing import Process, Value, Lock
 from .exceptions import BackendNotImplementedError
 from .utils import TURRISHW_ROOT
 
-if sys.version_info < (3, 0):
-    import SocketServer
-else:
-    import socketserver
-
-    SocketServer = socketserver
+import socketserver
 
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
@@ -666,13 +661,13 @@ def unix_notification_listener():
         if os.path.exists(NOTIFICATIONS_OUTPUT_PATH):
             raise
 
-    class Server(SocketServer.ThreadingMixIn, SocketServer.UnixStreamServer):
+    class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
         pass
 
     with open(NOTIFICATIONS_OUTPUT_PATH, "wb") as f:
         f.flush()
 
-        class Handler(SocketServer.StreamRequestHandler):
+        class Handler(socketserver.StreamRequestHandler):
             def handle(self):
                 while True:
                     length_raw = self.rfile.read(4)
