@@ -32,6 +32,7 @@ import typing
 import uuid
 
 
+from paho import mqtt as mqtt_module
 from paho.mqtt import client as mqtt
 from multiprocessing import Process, Value, Lock
 
@@ -39,6 +40,15 @@ from .exceptions import BackendNotImplementedError
 from .utils import TURRISHW_ROOT
 
 import socketserver
+
+
+def mqtt_client_extra():
+    if mqtt_module.__version__.split(".")[0] not in ["1", "0"]:
+        return {
+            "callback_api_version": mqtt.CallbackAPIVersion.VERSION1,
+        }
+    else:
+        return {}
 
 
 SOCK_PATH = "/tmp/foris-controller-test.soc"
@@ -61,7 +71,7 @@ def _wait_for_ubus_module(module, socket_path, timeout=2):
     wait_process.wait()
 
 
-class ClientSocket(object):
+class ClientSocket:
     def __init__(self, socket_path, message_bus=None):
         self.socket_path = socket_path
         self.socket = None
@@ -280,7 +290,7 @@ class MqttInfrastructure(Infrastructure):
                 except Exception:
                     pass
 
-            client = mqtt.Client()
+            client = mqtt.Client(**mqtt_client_extra())
             client.on_connect = on_connect
             client.on_message = on_message
             wait_mqtt_client_connected(client, MQTT_HOST, MQTT_PORT)
@@ -317,7 +327,7 @@ class MqttInfrastructure(Infrastructure):
         def on_subscribe(client, userdata, mid, granted_qos):
             client.publish(publish_topic, json.dumps(msg))
 
-        client = mqtt.Client()
+        client = mqtt.Client(**mqtt_client_extra())
         client.on_connect = on_connect
         client.on_message = on_message
         client.on_subscribe = on_subscribe
@@ -338,7 +348,7 @@ class MqttInfrastructure(Infrastructure):
         )
 
         # wait for mqtt port to be opened
-        client = mqtt.Client()
+        client = mqtt.Client(**mqtt_client_extra())
         wait_mqtt_client_connected(client, MQTT_HOST, MQTT_PORT, timeout=30)
 
     def terminate_message_bus(self):
@@ -634,7 +644,7 @@ def mqtt_notification_listener(host, port):
                     f.write(json.dumps(msg) + "\n")
                     f.flush()
 
-        client = mqtt.Client()
+        client = mqtt.Client(**mqtt_client_extra())
         client.on_connect = on_connect
         client.on_message = on_message
         wait_mqtt_client_connected(client, host, port)
