@@ -286,7 +286,7 @@ class MqttInfrastructure(Infrastructure):
             def on_message(client, userdata, msg):
                 try:
                     if json.loads(msg.payload)["data"]["state"] in ["started", "running"]:
-                        client.loop_stop(True)
+                        client.loop_stop()
                 except Exception:
                     pass
 
@@ -319,7 +319,7 @@ class MqttInfrastructure(Infrastructure):
         def on_message(client, userdata, msg):
             output.update(json.loads(msg.payload))
             client.disconnect()
-            client.loop_stop(True)
+            client.loop_stop()
 
         def on_connect(client, userdata, flags, rc):
             client.subscribe(reply_topic)
