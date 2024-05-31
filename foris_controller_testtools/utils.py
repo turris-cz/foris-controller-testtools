@@ -715,10 +715,8 @@ def prepare_turrishw_root(device: str, version: str):
         ("mox", "4"): "mox+EEC",  # compatible mapping for older tests
         ("mox", "6"): "mox+EEC",  # compatible mapping for older tests
         ("mox", "7"): "mox+EEC-7.0",
-        ("omnia", "3"): "omnia-3.X",
         ("omnia", "4"): "omnia-4.0",  # compatible mapping for older tests
         ("omnia", "7"): "omnia-7.0",
-        ("turris", "3"): "turris-3.X",
         ("turris", "4"): "turris-4.0",
         ("turris", "5"): "turris-5.2",
         ("turris", "6"): "turris-6.0",
