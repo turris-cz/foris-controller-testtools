@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-
-#
 # foris-controller-testtools
-# Copyright (C) 2018, 2020-2023 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
+# Copyright (C) 2018-2024 CZ.NIC, z.s.p.o. (http://www.nic.cz/)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,7 +18,6 @@
 
 import json
 import multiprocessing
-import os
 import re
 import shutil
 import stat
@@ -29,6 +25,8 @@ import tarfile
 import threading
 import time
 import typing
+
+from pathlib import Path
 
 from .exceptions import MockNotFoundError
 from .svupdater import approvals as svupdater_approvals
@@ -56,17 +54,14 @@ def get_uci_module(lock_backend):
     return uci
 
 
-def match_subdict(expected_data, obtained_data):
+def match_subdict(expected_data: dict, obtained_data: dict) -> bool:
     """ Decides whether one dict contains values specified in the second dict
         The second dict may contain extra fields.
         Note that this function is recursive and you need to avoid circular dict
 
         :param expected_data: data which are expected
-        :type expected_data: dict
         :param obtained_data: data which will be examined
-        :type expected_data: dict
         :returns: True if matches False otherwise
-        :rtype: bool
     """
     for key in expected_data:
         if key not in obtained_data:
@@ -84,9 +79,9 @@ def match_subdict(expected_data, obtained_data):
 
 
 def check_service_result(name, action, passed=None, clean=True, expected_found=True):
-    path = os.path.join(INIT_SCRIPT_TEST_DIR, name)
+    path = Path(INIT_SCRIPT_TEST_DIR) / name
     try:
-        with open(path) as f:
+        with path.open() as f:
             lines = f.readlines()
     except IOError:
         lines = []
@@ -105,16 +100,17 @@ def check_service_result(name, action, passed=None, clean=True, expected_found=T
             found = True
 
     if clean:
-        if os.path.exists(path):
-            os.unlink(path)
+        if path.exists():
+            path.unlink(missing_ok=True)
 
     assert found is expected_found
 
 
 def _command_was_called(called_file, args, cleanup):
     res = False
+    called_file = Path(called_file)
     try:
-        with open(called_file) as f:
+        with called_file.open() as f:
             lines = f.readlines()
 
         script_and_args = " ".join(args)
@@ -126,16 +122,17 @@ def _command_was_called(called_file, args, cleanup):
 
     if cleanup:
         try:
-            os.unlink(called_file)
+            called_file.unlink(missing_ok=True)
         except Exception:
             pass
 
     return res
 
 
-def _delay_till_file_exists(path, step=0.1, count=10):
+def _delay_till_file_exists(path: typing.Union[Path, str], step=0.1, count=10):
+    path = Path(path)
     for _ in range(count):
-        if os.path.exists(path):
+        if path.exists():
             break
         time.sleep(step)
 
@@ -204,13 +201,14 @@ def set_approval(approval=None):
     :param approval: new approval (or removes approval if None)
     :type approval: None or dict
     """
+    approval_path = Path(svupdater_approvals.APPROVAL_FILE_PATH)
     if approval is None:
         try:
-            os.unlink(svupdater_approvals.APPROVAL_FILE_PATH)
+            approval_path.unlink(missing_ok=True)
         except Exception:
             pass
     else:
-        with open(svupdater_approvals.APPROVAL_FILE_PATH, "w") as f:
+        with approval_path.open("w") as f:
             json.dump(approval, f)
             f.flush()
 
@@ -237,7 +235,7 @@ def set_languages(langs=None):
     """
     if not langs:
         langs = DEFAULT_LANGS
-    with open(svupdater_l10n.LANGS_FILE_PATH, "w") as f:
+    with Path(svupdater_l10n.LANGS_FILE_PATH).open("w") as f:
         json.dump(langs, f)
         f.flush()
 
@@ -629,58 +627,54 @@ def set_package_lists(lists=None):
     if not lists:
         lists = DEFAULT_PACKAGE_LISTS
 
-    with open(svupdater_lists.LISTS_FILE_PATH, "w") as f:
+    with Path(svupdater_lists.LISTS_FILE_PATH).open("w") as f:
         json.dump(lists, f)
         f.flush()
 
 
-class FileFaker(object):
-    def __init__(self, path_prefix, path, executable, content):
+class FileFaker:
+    def __init__(self, path_prefix: typing.Union[str, Path], path: typing.Union[str, Path], executable: bool, content: str):
         """ Intializes fake file
         :param path_prefix: prefixed path (e.g. /path/to/my/custom/root)
-        :type path_prefix: str
         :param path: actual file path (e.g. /usr/bin/iw)
-        :type path: str
         :param executable: should the file be executable
-        :type executable: bool
         :param content: the initial content of the file
-        :type content: str
         """
-        self.target_path = os.path.join(path_prefix, path.lstrip("/"))
+        # make sure that path variables are pathlib.Path
+        path_prefix = Path(path_prefix)
+        path = Path(path)
+
+        self.target_path = path_prefix / path.relative_to("/")
         self.executable = executable
         self.content = content
 
     def store_file(self):
         """ Stores into file system and updates permissions for the fake file
         """
-        try:
-            os.makedirs(os.path.dirname(self.target_path))
-        except os.error:
-            pass  # path might already exist
-
+        self.target_path.parent.mkdir(parents=True, exist_ok=True)
         self.update_content(self.content)
 
         if self.executable:
-            os.chmod(self.target_path, stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR)
+            self.target_path.chmod(stat.S_IRUSR | stat.S_IXUSR | stat.S_IWUSR)
 
     def get_content(self):
         """ Reads the current content of the file
             Might be useful is the file is expected to change
         """
-        with open(self.target_path) as f:
+        with self.target_path.open() as f:
             return f.read()
 
     def update_content(self, new_content):
         """ Updates the current content of the file
         """
-        with open(self.target_path, "w") as f:
+        with self.target_path.open("w") as f:
             f.write(new_content)
 
     def cleanup(self):
         """ Removes targeted file
         """
-        if os.path.exists(self.target_path):
-            os.unlink(self.target_path)
+        if self.target_path.exists():
+            self.target_path.unlink(missing_ok=True)
 
     def __enter__(self):
         self.store_file()
@@ -689,13 +683,14 @@ class FileFaker(object):
         self.cleanup()
 
 
-def read_and_parse_file(path: str, regex: str, groups: typing.Tuple[int] = (1,)):
+def read_and_parse_file(path: typing.Union[str, Path], regex: str, groups: typing.Tuple[int] = (1,)):
     """ Reads and parses a content of the file by regex,
         returns None when the output doesn't match regex.
         In case of match it returns string when one subgroup is requested,
         tuple when multiple subgroups are requested.
     """
-    with open(path) as f:
+    path = Path(path)
+    with path.open() as f:
         content = f.read()
 
     match = re.search(regex, content, re.MULTILINE)
@@ -736,6 +731,6 @@ def prepare_turrishw(root: str):
         shutil.rmtree(TURRISHW_ROOT, ignore_errors=True)
     except Exception:
         pass
-    path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "turrishw", "%s.tar.gz" % root)
+    path = Path(__file__).resolve().parent / "turrishw" / f"{root}.tar.gz"
     with tarfile.open(path, "r:gz") as tar:
         tar.extractall(TURRISHW_ROOT)
