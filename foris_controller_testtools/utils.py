@@ -644,7 +644,7 @@ class FileFaker:
         path_prefix = Path(path_prefix)
         path = Path(path)
 
-        self.target_path = path_prefix / path.relative_to("/")
+        self.target_path = path_prefix / (path.relative_to("/") if path.is_absolute() else path)
         self.executable = executable
         self.content = content
 
